@@ -1,6 +1,6 @@
 # com.exelerus.cordova.audioinput
 
-Since Navigator.getUserMedia() isn't supported on all browsers, this plugin enables similar audio capture from the device's microphone audio, forwarding the raw audio data to the HTML5 app using callbacks.
+Since Navigator.getUserMedia() isn't supported on all browsers, this plugin enables similar audio capture from the device's microphone audio, by forwarding the raw audio data to the HTML5 app using callbacks.
 
 It adds the following `window` event:
 
@@ -18,7 +18,7 @@ cordova plugin add https://github.com/edimuj/cordova-plugin-audioinput.git
 
 ## Example
 
-First define an function to receive the audio input data:
+First define a function to receive the audio input data:
 
 ```javascript
 function onAudioInput(e) {
@@ -31,7 +31,7 @@ function onAudioInput(e) {
 After the Cordova deviceready event has fired:
 
 ```javascript
-// Listen to audioinput events
+// Listen to audioinput events.
 window.addEventListener("audioinput", onAudioInput, false);
 
 // Capture configuration
@@ -43,7 +43,7 @@ var captureCfg = {
 };
 
 // Start capturing the audio input
-audioinput.start();
+audioinput.start(captureCfg);
 
 // Stop capturing the audio input
 audioinput.stop()
