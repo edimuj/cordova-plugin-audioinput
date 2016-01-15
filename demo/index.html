@@ -196,7 +196,7 @@
                 audioinput.start(captureCfg);
             }
             else {
-                // Get User Media?
+                // todo: Add Navigator.GetUserMedia()
             }
 
             getNextToDecode();
@@ -204,7 +204,11 @@
 
             timerInterVal = setInterval(function () {
                 document.getElementById("infoTimer").innerHTML = "" + new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1");
-                generateSimulatedAudioInput();
+
+                // Simulate some audio data on desktop
+                if(!isMobile.any()) {
+                    generateSimulatedAudioInput();
+                }
             }, 1000);
         });
         document.getElementById("stopCapture").addEventListener("click", function () {
