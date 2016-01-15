@@ -1,6 +1,6 @@
 # com.exelerus.cordova.audioinput
 
-Since Navigator.getUserMedia() isn't supported on all browsers, this plugin enables similar audio capture from the device's microphone audio, by forwarding the raw audio data to the HTML5 app using callbacks.
+Since Navigator.getUserMedia() isn't supported by all browsers, this plugin enables similar audio capture from the device's microphone audio, by forwarding the raw audio data to the HTML5 app using callbacks.
 
 It adds the following `window` event:
 
