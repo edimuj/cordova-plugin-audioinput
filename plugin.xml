@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.exelerus.cordova.audioinput"
+        version="0.0.1"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <name>AudioInput</name>
+
+    <js-module name="AudioInput" src="www/audioInputCapture.js">
+        <clobbers target="audioinput" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="AudioInputCapture">
+                <param name="android-package" value="com.exelerus.cordova.audioinputcapture.AudioInputCapture" />
+            </feature>
+        </config-file>
+
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        </config-file>
+
+        <source-file src="src/android/AudioInputCapture.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
+        <source-file src="src/android/AudioInputReceiver.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
+
+    </platform>
+
+</plugin>
