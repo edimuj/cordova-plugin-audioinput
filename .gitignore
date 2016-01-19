@@ -9,5 +9,6 @@
 !/README.md
 !/LICENSE.md
 !/LICENSE
+!/package.json
 !/.gitignore
 !/plugin.xml
