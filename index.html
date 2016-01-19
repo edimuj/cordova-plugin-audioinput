@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Cordova-plugin-audioinput by edimuj</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Cordova-plugin-audioinput</h1>
+        <p>This plugin captures the device&#39;s microphone and forwards the raw audio data to your HTML5 app.</p>
+
+        <p class="view"><a href="https://github.com/edimuj/cordova-plugin-audioinput">View the Project on GitHub <small>edimuj/cordova-plugin-audioinput</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/edimuj/cordova-plugin-audioinput/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/edimuj/cordova-plugin-audioinput/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/edimuj/cordova-plugin-audioinput">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="cordova-plugin-audioinput" class="anchor" href="#cordova-plugin-audioinput" aria-hidden="true"><span class="octicon octicon-link"></span></a>cordova-plugin-audioinput</h1>
+
+<p>Cordova plugin which provides real-time audio data capture from the device's microphone.
+It can be used for apps that apply effects to microphone input using for example the HTML5 Web Audio API.</p>
+
+<p>Since 'Navigator.getUserMedia()' isn't supported by all browsers, this plugin enables similar functionality by forwarding raw audio data to the HTML5 app using continuous callbacks.</p>
+
+<p>It adds the following <code>window</code> event:</p>
+
+<ul>
+<li>audioinput</li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>cordova plugin add cordova-plugin-audioinput
+</code></pre>
+
+<p>or</p>
+
+<pre><code>cordova plugin add https://github.com/edimuj/cordova-plugin-audioinput.git
+</code></pre>
+
+<h2>
+<a id="supported-platforms" class="anchor" href="#supported-platforms" aria-hidden="true"><span class="octicon octicon-link"></span></a>Supported Platforms</h2>
+
+<ul>
+<li>Android</li>
+</ul>
+
+<p>(iOS support is on the way.)</p>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example</h2>
+
+<p>Define a callback function to receive audio input data. It will continuously be called during capture:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">function</span> <span class="pl-en">onAudioInput</span>(<span class="pl-smi">evt</span>) {
+
+    <span class="pl-c">// 'evt.data' is an integer array containing normalized audio data.</span>
+    <span class="pl-c">//   </span>
+    <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Audio data received: <span class="pl-pds">"</span></span> <span class="pl-k">+</span> <span class="pl-smi">evt</span>.<span class="pl-c1">data</span>.<span class="pl-c1">length</span> <span class="pl-k">+</span> <span class="pl-s"><span class="pl-pds">"</span> samples<span class="pl-pds">"</span></span>);
+
+    <span class="pl-c">// ... do something with the evt.data array ...</span>
+}
+
+<span class="pl-c">// Listen to audioinput events.</span>
+<span class="pl-smi">window</span>.<span class="pl-en">addEventListener</span>(<span class="pl-s"><span class="pl-pds">"</span>audioinput<span class="pl-pds">"</span></span>, onAudioInput, <span class="pl-c1">false</span>);</pre></div>
+
+<p>After the Cordova <code>deviceready</code> event has fired:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> captureCfg <span class="pl-k">=</span> {
+    sampleRate<span class="pl-k">:</span> <span class="pl-c1">44100</span>,
+    bufferSize<span class="pl-k">:</span> <span class="pl-c1">8192</span>, 
+    channels<span class="pl-k">:</span> <span class="pl-c1">1</span>,
+    format<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>PCM_16BIT<span class="pl-pds">'</span></span>
+};
+
+<span class="pl-c">// Start capturing audio from the microphone</span>
+<span class="pl-smi">audioinput</span>.<span class="pl-c1">start</span>(captureCfg);
+
+<span class="pl-c">// Stop capturing audio input</span>
+<span class="pl-smi">audioinput</span>.<span class="pl-c1">stop</span>()</pre></div>
+
+<h2>
+<a id="demo" class="anchor" href="#demo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Demo</h2>
+
+<p>The <code>demo</code> folder contains an simple example where the captured microphone audio data is used to playback the audio to the device speaker using the Web Audio API.</p>
+
+<h2>
+<a id="api" class="anchor" href="#api" aria-hidden="true"><span class="octicon octicon-link"></span></a>API</h2>
+
+<p>Start capturing audio from the microphone:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">audioinput</span>.<span class="pl-c1">start</span>(captureCfg);</pre></div>
+
+<p>Where <code>captureCfg</code> can contain any of the following parameters (Please note that not all configurations are supported by all devices):</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> captureCfg <span class="pl-k">=</span> {
+    sampleRate<span class="pl-k">:</span> <span class="pl-c1">44100</span>, <span class="pl-c">// The Sample Rate in Hz. Default: 44100.</span>
+    bufferSize<span class="pl-k">:</span> <span class="pl-c1">8192</span>, <span class="pl-c">// Maximum size in bytes of the capture buffer. Default: 16384.</span>
+    channels<span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-c">// The number of channels to use: Mono (1) or Stereo (2). Default: 1.</span>
+    format<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>PCM_16BIT<span class="pl-pds">'</span></span> <span class="pl-c">// The audio format. Currently PCM_16BIT and PCM_8BIT are supported. Default: 'PCM_16BIT'.</span>
+};</pre></div>
+
+<p>Stop capturing audio from the microphone:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">audioinput</span>.<span class="pl-c1">stop</span>();</pre></div>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>The plugin is created and maintained by Edin Mujkanovic.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/edimuj">edimuj</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-72594064-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
