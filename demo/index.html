@@ -1,281 +1,60 @@
 <!DOCTYPE html>
 
 <head>
-    <title>Cordova AudioInput Plugin - Demo</title>
+    <title>Cordova Plugin AudioInput Demo</title>
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport"
           content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-    <!--link href="style/bootstrap.min.css" rel="stylesheet"-->
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+
+    <style>
+        /* Disable text selection for all elements except input elements */
+        * {
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: -moz-none;
+            -o-user-select: none;
+            user-select: none;
+        }
+        input {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -o-user-select: text;
+            user-select: text;
+        }
+    </style>
 </head>
 
 <body>
-<h1>Cordova AudioInput Plugin - Demo</h1>
-<div id="infoTimer"></div>
-<div id="infoMessage">Use "Start Capture" below to begin...</div>
-<br>
-<label for="sampleRate">SampleRate</label>
-<input id="sampleRate" type="number" value="44100"/> Hz<br>
-<br>
-<label for="bufferSize">BufferSize</label>
-<input id="bufferSize" type="number" value="8192"/> bytes<br>
-<br>
-<label for="channelsMono">Channels</label><br>
-<input type="radio" id="channelsMono" name="channels" value="1" checked>Mono
-<input type="radio" id="channelsStereo" name="channels" value="2">Stereo<br>
-<br>
-<label for="format8">Format</label><br>
-<input type="radio" id="format8" name="format" value="PCM_8BIT">PCM 8BIT
-<input type="radio" id="format16" name="format" value="PCM_16BIT" checked>PCM 16BIT<br>
-<br>
-<br>
-<a href="#" id="startCapture">Start Capture</a><br>
-<br>
-<a href="#" id="stopCapture">Stop Capture</a>
+<div class="w3-center">
+    <h1>Cordova AudioInput Plugin - Demo</h1>
+    <div id="infoTimer"></div>
+    <div id="infoMessage">Use "Start Capture" below to begin...</div>
+    <br>
+    <form class="w3-container">
+        <label for="sampleRate">SampleRate</label>
+        <input id="sampleRate" type="number" value="44100"/> Hz<br>
+        <br>
+        <label for="bufferSize">BufferSize</label>
+        <input id="bufferSize" type="number" value="16384"/> bytes<br>
+        <br>
+        <label for="channelsMono">Channels</label><br>
+        <input type="radio" id="channelsMono" name="channels" value="1" checked> Mono
+        <input type="radio" id="channelsStereo" name="channels" value="2"> Stereo<br>
+        <br>
+        <label for="format8">Format</label><br>
+        <input type="radio" id="format8" name="format" value="PCM_8BIT"> PCM 8BIT
+        <input type="radio" id="format16" name="format" value="PCM_16BIT" checked> PCM 16BIT<br>
+        <br>
+        <br>
+        <a class="w3-btn w3-green" href="#" id="startCapture">Start Capture</a><br>
+        <br>
+        <a class="w3-btn w3-red" href="#" id="stopCapture">Stop Capture</a>
+    </form>
+</div>
 </body>
 
 <script type="text/javascript" src="cordova.js"></script>
-
-<script>
-    // Web Audio API
-    var audioContext, micGainNode;
-
-    // Capture configuration
-    var captureCfg = {
-        sampleRate: 44100,
-        bufferSize: 8192,
-        channels: 1,
-        format: 'PCM_16BIT'
-    };
-
-    // Queues
-    var rawDataQueue = [], audioDataQueue = [], concatenateMaxChunks = 10;
-
-    // Info/Debug
-    var receivedData = 0,
-            convertedData = 0,
-            playedData = 0,
-            message;
-
-    // Timers
-    var timerGetNextAudio;
-
-    var isMobile = {
-        Android: function () {
-            return /Android/i.test(navigator.userAgent);
-        },
-        BlackBerry: function () {
-            return /BlackBerry/i.test(navigator.userAgent);
-        },
-        iOS: function () {
-            return /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        },
-        Windows: function () {
-            return /IEMobile/i.test(navigator.userAgent);
-        },
-        any: function () {
-            return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Windows());
-        }
-    };
-
-    /**
-     *
-     */
-    var getNextToPlay = function () {
-        var duration = 50;
-
-        if (audioDataQueue.length > 0) {
-            var audioData = audioDataQueue.shift();
-            duration = playAudio(audioData) * 1000;
-        }
-
-        setTimeout(getNextToPlay, duration);
-    };
-
-    /**
-     *
-     */
-    var getNextToDecode = function () {
-        if (rawDataQueue.length > 0) {
-            var concatenatedData = [];
-            for (var i = 0; i < concatenateMaxChunks; i++) {
-                if (rawDataQueue.length === 0) {
-                    break;
-                }
-                var rawData = rawDataQueue.shift();
-                var normalizedData = normalizeArrayAudioData(rawData);
-                concatenatedData = concatenatedData.concat(normalizedData);
-            }
-            audioDataQueue.push(concatenatedData);
-        }
-
-        setTimeout(getNextToDecode, 500);
-    };
-
-    /**
-     *
-     */
-    var normalizeArrayAudioData = function (data) {
-        for (var i = 0; i < data.length; i++) {
-            data[i] = parseFloat(data[i] / (32767.0));
-        }
-        return data;
-    };
-
-
-    /**
-     *
-     */
-    var playAudio = function (data) {
-        var audioBuffer = audioContext.createBuffer(captureCfg.channels, data.length, captureCfg.sampleRate);
-        audioBuffer.getChannelData(0).set(data);
-
-        var source = audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(micGainNode);
-        source.onended = function () {
-            //
-        };
-
-        source.start(0);
-        return audioBuffer.duration;
-    };
-
-
-    /**
-     *
-     */
-    function onAudioInputCapture(e) {
-        if (e && e.data) {
-            var decoded = e.data.substr(1, e.data.length - 1).split(',');
-
-            rawDataQueue.push(decoded);
-        }
-        else if (e && e.error) {
-            consoleMessage("An error occurred: " + e.error);
-        }
-        else {
-            consoleMessage("An error occurred");
-        }
-    }
-
-
-    /**
-     *
-     */
-    var initWebAudio = function () {
-        try {
-            window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioContext = new AudioContext();
-            consoleMessage("Web Audio Context is ready");
-        }
-        catch (e) {
-            consoleMessage('Web Audio API is not supported in this browser: ' + e);
-            return;
-        }
-
-        micGainNode = audioContext.createGain();
-        micGainNode.connect(audioContext.destination);
-    };
-
-
-    /**
-     *
-     */
-    var initUIEvents = function () {
-        document.getElementById("startCapture").addEventListener("click", function () {
-
-            captureCfg = {
-                sampleRate: document.getElementById('sampleRate').value,
-                bufferSize: document.getElementById('bufferSize').value,
-                channels: document.querySelector('input[name="channels"]:checked').value,
-                format: document.querySelector('input[name="format"]:checked').value
-            };
-
-            if (isMobile.any()) {
-                audioinput.start(captureCfg);
-            }
-            else {
-                // todo: Add Navigator.GetUserMedia()
-            }
-
-            getNextToDecode();
-            getNextToPlay();
-
-            timerInterVal = setInterval(function () {
-                document.getElementById("infoTimer").innerHTML = "" + new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1");
-
-                // Simulate some audio data on desktop
-                if(!isMobile.any()) {
-                    generateSimulatedAudioInput();
-                }
-            }, 1000);
-        });
-        document.getElementById("stopCapture").addEventListener("click", function () {
-            if (isMobile.any()) {
-                audioinput.stop();
-            }
-
-            clearInterval(timerInterVal);
-
-            rawDataQueue = [];
-            audioDataQueue = [];
-        });
-    };
-
-
-    /**
-     *
-     */
-    function onDeviceReady() {
-
-        initUIEvents();
-
-        initWebAudio();
-
-        window.addEventListener("audioinput", onAudioInputCapture, false);
-
-        consoleMessage("Ready!");
-    }
-
-    /**
-     *
-     * @param msg The message to show
-     */
-    function consoleMessage(msg) {
-        document.getElementById("infoMessage").innerHTML = msg;
-    }
-
-    // For Cordova apps.
-    document.addEventListener('deviceready', onDeviceReady, false);
-
-    // Make it possible to run on desktop
-    if (!isMobile.any()) {
-        console.log("Running on desktop.");
-        onDeviceReady();
-    }
-
-
-    var generateSimulatedAudioInput = function () {
-        try {
-            var nrOfChunks = 50,
-                    chunkSize = 16378;
-
-
-            var data = [];
-            for (var k = 0; k < chunkSize; k++) {
-                data.push(Math.random() * 100 - 50);
-            }
-
-            var callParam = {
-                data: "[" + data.toString() + "]"
-            };
-            for (var i = 0; i < nrOfChunks; i++) {
-                onAudioInputCapture(callParam);
-            }
-        }
-        catch (e) {
-            console.error(e);
-        }
-    };
-</script>
+<script type="text/javascript" src="demo.js"></script>
