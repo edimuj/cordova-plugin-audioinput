@@ -9,18 +9,13 @@ import android.os.Handler;
 import android.os.Message;
 import java.util.Arrays;
 
-//import java.io.UnsupportedEncodingException;
-//import android.util.Base64;
-
 public class AudioInputReceiver extends Thread {
 
-    private int sampleRateInHz = 44100;
-
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
-    //private int channelConfig = AudioFormat.CHANNEL_IN_STEREO;
 
-    //private int audioFormat = AudioFormat.ENCODING_PCM_8BIT;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+
+    private int sampleRateInHz = 44100;
 
     private int bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
 
@@ -85,18 +80,6 @@ public class AudioInputReceiver extends Thread {
 					try {
 
 						String decoded = Arrays.toString(audioBuffer);
-
-					/*
-						// Convert Short audioBuffer to Byte array
-						byte[] audioBytes = ShortToByte_Twiddle_Method(audioBuffer);
-
-						try {
-							//String decoded = Base64.encodeToString(audioBytes, Base64.NO_WRAP);
-						}
-						catch(UnsupportedEncodingException uex) {
-						}
-
-					*/
 
 	                    // send data to handler
 	                    message = handler.obtainMessage();
