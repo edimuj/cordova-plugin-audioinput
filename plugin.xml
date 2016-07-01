@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-plugin-audioinput"
+        version="0.1.0"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <name>Audio Input</name>
+    <description>Cordova plugin which provides real-time audio data capture from the device's microphone.</description>
+	<author>Edin Mujkanovic</author>
+	<license>MIT</license>
+    <keywords>cordova,media,microphone,mic,input,audio</keywords>
+    <repo>https://github.com/edimuj/cordova-plugin-audioinput.git</repo>
+    <issue>https://github.com/edimuj/cordova-plugin-audioinput/issues</issue>
+
+    <js-module name="AudioInput" src="www/audioInputCapture.js">
+        <clobbers target="audioinput" />
+    </js-module>
+
+    <dependency id="cordova-plugin-compat" version="^1.0.0" />
+
+    <!-- android -->
+    <platform name="android">
+
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="AudioInputCapture">
+                <param name="android-package" value="com.exelerus.cordova.audioinputcapture.AudioInputCapture" />
+            </feature>
+        </config-file>
+
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        </config-file>
+
+        <source-file src="src/android/AudioInputCapture.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
+        <source-file src="src/android/AudioInputReceiver.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
+
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+
+        <config-file parent="/*" target="config.xml">
+            <feature name="AudioInputCapture">
+                <param name="ios-package" value="CDVAudioInputCapture" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/ios/CDVAudioInputCapture.m" />
+        <source-file src="src/ios/AudioReceiver.h" />
+        <source-file src="src/ios/AudioReceiver.m" />
+
+        <framework src="Accelerate.framework" weak="true" />
+        <framework src="CoreAudio.framework" weak="true" />
+        <framework src="AudioToolbox.framework" weak="true" />
+        <framework src="AVFoundation.framework" weak="true" />
+
+    </platform>
+
+</plugin>

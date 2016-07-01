@@ -1,0 +1,25 @@
+{
+  "name": "cordova-plugin-audioinput",
+  "version": "0.0.1",
+  "description": "This plugin enables audio capture from the device's microphone, by forwarding raw audio data using callbacks.",
+  "cordova": {
+    "id": "cordova-plugin-audioinput",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edimuj/cordova-plugin-audioinput.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "author": "Edin Mujkanovic",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/edimuj/cordova-plugin-audioinput/issues"
+  },
+  "homepage": "https://github.com/edimuj/cordova-plugin-audioinput#readme"
+}
