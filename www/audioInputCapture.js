@@ -38,7 +38,7 @@ audioinput.start = function (cfg) {
 
         audioinput.cfg = {};
         audioinput.cfg.sampleRate = cfg.sampleRate || 44100;
-        audioinput.cfg.bufferSize = cfg.bufferSize || 4096;
+        audioinput.cfg.bufferSize = cfg.bufferSize || 16384;
         audioinput.cfg.channels = cfg.channels || 1;
         audioinput.cfg.format = cfg.format || 'PCM_16BIT';
         audioinput.cfg.normalize = cfg.normalize || true;
