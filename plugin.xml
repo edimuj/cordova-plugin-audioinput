@@ -5,10 +5,10 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <name>Audio Input</name>
-    <description>Cordova plugin which provides real-time audio data capture from the device's microphone.</description>
+    <description>A Cordova/PhoneGap plugin that enables audio capture from the device microphone, by in near real-time forwarding raw audio data to the web layer of your application.</description>
 	<author>Edin Mujkanovic</author>
 	<license>MIT</license>
-    <keywords>cordova,media,microphone,mic,input,audio</keywords>
+    <keywords>cordova,phonegap,media,microphone,mic,input,audio,waapi,audionode</keywords>
     <repo>https://github.com/edimuj/cordova-plugin-audioinput.git</repo>
     <issue>https://github.com/edimuj/cordova-plugin-audioinput/issues</issue>
 
