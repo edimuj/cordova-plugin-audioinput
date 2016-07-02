@@ -1,7 +1,7 @@
 {
   "name": "cordova-plugin-audioinput",
   "version": "0.0.9",
-  "description": "This Cordova/PhoneGap plugin enables audio capture from the device microphone, by in near real-time forwarding raw audio data to the web layer of your application. A typical usage scenario for this plugin would be to use the captured audio as source for a web audio node chain where it then can be manipulated or analyzed with or without playback through the speakers. Since `Navigator.getUserMedia()` still isn't supported by all browsers, this plugin provides similar functionality. This is especially true for Safari mobile on iOS devices, where the Web Audio API is supported, but currently has no support for `getUserMedia`. The plugin supports two different methods for capture: 1. Using the `audioinput` object as a Audio Node, which can be connected to your Web Audio node chain. 2. Using events to receive chunks of raw audio data, which then can be processed by your app.",
+  "description": "This Cordova/PhoneGap plugin enables audio capture from the device microphone, by in near real-time forwarding raw audio data to the web layer of your application.",
   "cordova": {
     "id": "cordova-plugin-audioinput",
     "platforms": [
