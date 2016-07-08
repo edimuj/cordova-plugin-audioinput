@@ -169,7 +169,7 @@ audioinput.audioInputEvent = function (audioInputData) {
  * @private
  */
 audioinput.error = function (e) {
-    cordova.fireWindowEvent("audioinputerror", e);
+    cordova.fireWindowEvent("audioinputerror", {message: e});
 };
 
 /**
