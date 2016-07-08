@@ -1,6 +1,3 @@
-/*var cordova = require('cordova'),
-    exec = require('cordova/exec');*/
-
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
     exec = require('cordova/exec'),
@@ -58,13 +55,13 @@ audioinput.start = function (cfg) {
 
         exec(audioinput.audioInputEvent, audioinput.error, "AudioInputCapture", "start", [audioinput.cfg.sampleRate, audioinput.cfg.bufferSize, audioinput.cfg.channels, audioinput.cfg.format]);
 
+        audioinput.capturing = true;
+
         if (audioinput.cfg.streamToWebAudio) {
             audioinput._initWebAudio(audioinput.cfg.audioContext);
             audioinput.audioDataQueue = [];
             audioinput._getNextToPlay();
         }
-
-        audioinput.capturing = true;
     }
     catch (ex) {
         throw "Failed to start audioinput due to: " + ex;
@@ -77,14 +74,14 @@ audioinput.start = function (cfg) {
  */
 audioinput.stop = function () {
     exec(null, audioinput.error, "AudioInputCapture", "stop", []);
+    audioinput.capturing = false;
+
     if (audioinput.cfg.streamToWebAudio) {
         if (audioinput.timerGetNextAudio) {
             clearTimeout(audioinput.timerGetNextAudio);
         }
         audioinput.audioDataQueue = null;
     }
-
-    audioinput.capturing = false;
 };
 
 
@@ -169,7 +166,7 @@ audioinput.audioInputEvent = function (audioInputData) {
  * @private
  */
 audioinput.error = function (e) {
-    cordova.fireWindowEvent("audioinputerror", e);
+    cordova.fireWindowEvent("audioinputerror", {message: e});
 };
 
 /**
@@ -329,6 +326,3 @@ for (var key in audioinput.channels) {
 }*/
 
 module.exports = audioinput;
-
-
-
