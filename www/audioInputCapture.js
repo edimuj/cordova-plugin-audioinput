@@ -38,9 +38,9 @@ audioinput.start = function (cfg) {
         audioinput.cfg.bufferSize = cfg.bufferSize || 16384;
         audioinput.cfg.channels = cfg.channels || 1;
         audioinput.cfg.format = cfg.format || 'PCM_16BIT';
-        audioinput.cfg.normalize = cfg.normalize || true;
+        audioinput.cfg.normalize = typeof cfg.normalize == 'boolean' ? cfg.normalize : true;
         audioinput.cfg.normalizationFactor = cfg.normalizationFactor || 32767.0;
-        audioinput.cfg.streamToWebAudio = cfg.streamToWebAudio || false;
+        audioinput.cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : false;
         audioinput.cfg.audioContext = cfg.audioContext || null;
         audioinput.cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || 10;
 
