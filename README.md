@@ -104,7 +104,7 @@ audioinput.start( captureCfg );
 ```
 
 Where `captureCfg` can either be empty, null or contain any of the following parameters. 
-Please note that not all audio configurations are supported by all devices, and that all of them have default values:
+Please note that not all audio configuration combinations are supported by all devices, and that all of them have default values:
 
 ```javascript
 var captureCfg = {
@@ -119,6 +119,8 @@ var captureCfg = {
     channels: 1,
     
     // The audio format. Currently PCM_16BIT and PCM_8BIT are supported.
+    // For convienence use the audioinput.FORMAT constant to access the possible formats that the plugin supports. For example:
+    // format: audioinput.FORMAT.PCM_16BIT
     format: 'PCM_16BIT',
     
     // Specifies if the audio data should be normalized or not.
