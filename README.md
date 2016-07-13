@@ -119,7 +119,7 @@ var captureCfg = {
     channels: 1,
     
     // The audio format. Currently PCM_16BIT and PCM_8BIT are supported.
-    // For convienence use the audioinput.FORMAT constant to access the possible formats that the plugin supports. For example:
+    // For convenience, use the audioinput.FORMAT constant to access the possible formats that the plugin supports. For example:
     // format: audioinput.FORMAT.PCM_16BIT
     format: 'PCM_16BIT',
     
