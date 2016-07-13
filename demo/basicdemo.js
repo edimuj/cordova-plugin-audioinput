@@ -11,6 +11,14 @@ var initUIEvents = function () {
     });
 };
 
+/**
+ *
+ * @param error
+ */
+function onAudioInputError(error) {
+    alert("onAudioInputError event recieved: " + JSON.stringify(error));
+}
+
 
 /**
  * Start Audio capture
@@ -28,7 +36,6 @@ var startCapture = function () {
             audioinput.connect(audioinput.getAudioContext().destination);
 
             consoleMessage("Capturing audio!");
-            //alert("Microphone input started with the following configuration: " + JSON.stringify(window.audioinput.getCfg()))
         }
         else {
             consoleMessage("audioinput plugin is not available!");
@@ -56,8 +63,9 @@ var stopCapture = function () {
  * When cordova fires the deviceready event, we initialize everything needed for audio input.
  */
 var onDeviceReady = function () {
-
     initUIEvents();
+
+    window.addEventListener('audioinputerror', onAudioInputError, false);
 
     consoleMessage("Use 'Start Capture' to begin...");
 };

@@ -41,7 +41,7 @@ var generateSimulatedAudioInput = function (bufferSize, numberOfIterations) {
         var data = [];
 
         for (var k = 0; k < bufSize; k++) {
-            data.push((parseFloat(Math.random() * 100.0) - 50.0));
+            data.push((parseFloat(Math.random() * 1.0) - 0.5));
         }
 
         // Dispatch an event

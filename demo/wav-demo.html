@@ -7,13 +7,14 @@
     <meta name="viewport"
           content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
     <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
-    <link rel="stylesheet" href="../plugin/demo/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 <div class="w3-center">
     <h3>Cordova AudioInput Plugin<br>
-        Advanced Demo</h3>
+        WAV Demo</h3>
+    <i><a href="https://github.com/higuma/wav-audio-encoder-js">WavAudioEncoder.js</a> is used for the WAV encoding</i><br>
     <div id="infoTimer"></div>
     <div id="infoMessage">Not ready</div>
     <br>
@@ -33,14 +34,18 @@
         <input type="radio" id="format16" name="format" value="PCM_16BIT" checked> PCM 16BIT<br>
         <br>
         <a class="w3-btn w3-green" href="#" id="startCapture">Start Capture</a>
-        <a class="w3-btn w3-red" href="#" id="stopCapture">Stop Capture</a>
+        <a class="w3-btn w3-red" href="#" id="stopCapture">Stop and Save</a>
     </form>
     <br>
+    <div id="recording-list">...Recordings will show up here...</div>
+    <br>
     <a class="w3-btn" href="basicdemo.html">Open the Basic Demo</a>
-    <a class="w3-btn" href="wav-demo.html">Open the WAV Demo</a>
+    <a class="w3-btn" href="advanceddemo.html">Open the Advanced Demo</a>
+    <br>
 </div>
 </body>
 
-<script type="text/javascript" src="cordova.js"></script>
+<script type="text/javascript" src="WavAudioEncoder.min.js"></script>
 <script type="text/javascript" src="utils.js"></script>
-<script type="text/javascript" src="advanceddemo.js"></script>
+<script type="text/javascript" src="cordova.js"></script>
+<script type="text/javascript" src="wav-demo.js"></script>

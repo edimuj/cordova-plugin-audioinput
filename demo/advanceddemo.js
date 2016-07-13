@@ -48,7 +48,7 @@ function onAudioInputCapture(evt) {
  * @param error
  */
 function onAudioInputError(error) {
-    alert("onAudioInputError event recieved: " + error);
+    alert("onAudioInputError event recieved: " + JSON.stringify(error));
 }
 
 

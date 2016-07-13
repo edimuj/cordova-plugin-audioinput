@@ -9,7 +9,13 @@ var audioinput = {
     audioDataQueue: [],
     capturing: false,
     concatenateMaxChunks: 10,
-    timerGetNextAudio: 0
+    timerGetNextAudio: 0,
+    notifyEmptyDataErrors: false
+};
+
+audioinput.FORMAT = {
+	PCM_16BIT: 'PCM_16BIT',
+	PCM_8BIT: 'PCM_8BIT'
 };
 
 /**
@@ -43,6 +49,7 @@ audioinput.start = function (cfg) {
         audioinput.cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : false;
         audioinput.cfg.audioContext = cfg.audioContext || null;
         audioinput.cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || 10;
+        audioinput.cfg.notifyEmptyDataErrors = typeof cfg.notifyEmptyDataErrors == 'boolean' ? cfg.notifyEmptyDataErrors : false;
 
         if (audioinput.cfg.channels < 1 && audioinput.cfg.channels > 2) {
             throw "Invalid number of channels (" + audioinput.cfg.channels + "). Only mono (1) and stereo (2) is" +
@@ -53,7 +60,7 @@ audioinput.start = function (cfg) {
             " supported.";
         }
 
-        exec(audioinput.audioInputEvent, audioinput.error, "AudioInputCapture", "start", [audioinput.cfg.sampleRate, audioinput.cfg.bufferSize, audioinput.cfg.channels, audioinput.cfg.format]);
+        exec(audioinput._audioInputEvent, audioinput._audioInputErrorEvent, "AudioInputCapture", "start", [audioinput.cfg.sampleRate, audioinput.cfg.bufferSize, audioinput.cfg.channels, audioinput.cfg.format]);
 
         audioinput.capturing = true;
 
@@ -73,7 +80,7 @@ audioinput.start = function (cfg) {
  * Stop capturing audio
  */
 audioinput.stop = function () {
-    exec(null, audioinput.error, "AudioInputCapture", "stop", []);
+    exec(null, audioinput._audioInputErrorEvent, "AudioInputCapture", "stop", []);
     audioinput.capturing = false;
 
     if (audioinput.cfg.streamToWebAudio) {
@@ -136,7 +143,7 @@ audioinput.isCapturing = function () {
  *
  * @param {Object} audioInputData     keys: data (PCM)
  */
-audioinput.audioInputEvent = function (audioInputData) {
+audioinput._audioInputEvent = function (audioInputData) {
     try {
         if (audioInputData && audioInputData.data && audioInputData.data.length > 0) {
             var audioData = audioInputData.data.substr(1, audioInputData.data.length - 1).split(',');
@@ -150,14 +157,16 @@ audioinput.audioInputEvent = function (audioInputData) {
             }
         }
         else if (audioInputData && audioInputData.error) {
-            audioinput.error(audioInputData.error);
+            audioinput._error(audioInputData.error);
         }
         else {
-            //audioinput.error("Empty"); // Happens when capture is stopped
+            if(audioinput.cfg.notifyEmptyDataErrors) {
+                audioinput._error("No data"); // Happens when capture is stopped
+            }
         }
     }
     catch (ex) {
-        audioinput.error("audioinput._audioInputEvent ex: " + ex);
+        audioinput._error("audioinput._audioInputEvent ex: " + ex);
     }
 };
 
@@ -165,7 +174,7 @@ audioinput.audioInputEvent = function (audioInputData) {
  * Error callback for AudioInputCapture start
  * @private
  */
-audioinput.error = function (e) {
+audioinput._audioInputErrorEvent = function (e) {
     cordova.fireWindowEvent("audioinputerror", {message: e});
 };
 
@@ -217,7 +226,7 @@ audioinput._getNextToPlay = function () {
         }
     }
     catch (ex) {
-        audioinput.error("audioinput._getNextToPlay ex: " + ex);
+        audioinput._error("audioinput._getNextToPlay ex: " + ex);
     }
 };
 
@@ -258,7 +267,7 @@ audioinput._playAudio = function (data) {
         return audioBuffer.duration;
     }
     catch (ex) {
-        audioinput.error("audioinput._playAudio ex: " + ex);
+        audioinput._error("audioinput._playAudio ex: " + ex);
     }
 };
 
@@ -271,7 +280,7 @@ audioinput._initWebAudio = function (audioCtxFromCfg) {
     if (!audioinput.audioContext) { // Only if not already set
         if (!audioCtxFromCfg) { // Create a new context if not given in cfg
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioinput.audioContext = new AudioContext();
+            audioinput.audioContext = new window.AudioContext();
         }
         else {
             audioinput.audioContext = audioCtxFromCfg;
@@ -303,26 +312,5 @@ audioinput._enqueueAudioData = function (data) {
 audioinput._dequeueAudioData = function () {
     return audioinput.audioDataQueue.shift();
 };
-
-/*
-audioinput._handlers = function () {
-    return audioinput.channels.audioInput.numHandlers;
-};
-
-audioinput.onHasSubscribersChange = function () {
-    if (audioinput._handlers() === 0) {
-        exec(null, null, "AudioInputCapture", "stop", []);
-    }
-};
-
-audioinput.channels = {
-    audioInput: cordova.addWindowEventHandler("audioinput")
-};
-
-for (var key in audioinput.channels) {
-    if (audioinput.channels.hasOwnProperty(key)) {
-        audioinput.channels[key].onHasSubscribersChange = audioinput.onHasSubscribersChange;
-    }
-}*/
 
 module.exports = audioinput;
