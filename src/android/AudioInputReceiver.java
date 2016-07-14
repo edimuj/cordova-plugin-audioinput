@@ -54,7 +54,8 @@ public class AudioInputReceiver extends Thread {
 		}
 
         bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
-        if (bufferSizeInBytes > bufferSize) {
+        // Ensure that the given bufferSize isn't lower than the minimum buffer sized allowed for the current configuration
+        if (bufferSizeInBytes < bufferSize) {
             bufferSize = bufferSizeInBytes;
         }
         recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRateInHz, channelConfig, audioFormat, bufferSize);
