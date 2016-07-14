@@ -64,6 +64,8 @@ audioinput.start = function (cfg) {
 
         audioinput.capturing = true;
 
+        audioinput.capturing = true;
+
         if (audioinput.cfg.streamToWebAudio) {
             audioinput._initWebAudio(audioinput.cfg.audioContext);
             audioinput.audioDataQueue = [];
@@ -146,7 +148,7 @@ audioinput.isCapturing = function () {
 audioinput._audioInputEvent = function (audioInputData) {
     try {
         if (audioInputData && audioInputData.data && audioInputData.data.length > 0) {
-            var audioData = audioInputData.data.substr(1, audioInputData.data.length - 1).split(',');
+            var audioData = JSON.parse(audioInputData.data);
             audioData = audioinput._normalizeAudio(audioData);
 
             if (audioinput.cfg.streamToWebAudio && audioinput.capturing) {
@@ -174,6 +176,7 @@ audioinput._audioInputEvent = function (audioInputData) {
  * Error callback for AudioInputCapture start
  * @private
  */
+
 audioinput._audioInputErrorEvent = function (e) {
     cordova.fireWindowEvent("audioinputerror", {message: e});
 };
