@@ -64,8 +64,6 @@ audioinput.start = function (cfg) {
 
         audioinput.capturing = true;
 
-        audioinput.capturing = true;
-
         if (audioinput.cfg.streamToWebAudio) {
             audioinput._initWebAudio(audioinput.cfg.audioContext);
             audioinput.audioDataQueue = [];
