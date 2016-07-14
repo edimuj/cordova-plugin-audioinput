@@ -37,10 +37,6 @@ public class AudioInputReceiver extends Thread {
 
 		sampleRateInHz = sampleRate;
 
-        if (bufferSizeInBytes > bufferSize) {
-            bufferSize = bufferSizeInBytes;
-        }
-
 		switch (channels) {
             case 2:
                 channelConfig = AudioFormat.CHANNEL_IN_STEREO;
@@ -50,7 +46,6 @@ public class AudioInputReceiver extends Thread {
                 channelConfig = AudioFormat.CHANNEL_IN_MONO;
                 break;
         }
-
 		if(format == "PCM_8BIT") {
 			audioFormat = AudioFormat.ENCODING_PCM_8BIT;
 		}
@@ -58,6 +53,10 @@ public class AudioInputReceiver extends Thread {
 			audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 		}
 
+        bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+        if (bufferSizeInBytes > bufferSize) {
+            bufferSize = bufferSizeInBytes;
+        }
         recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRateInHz, channelConfig, audioFormat, bufferSize);
     }
 
