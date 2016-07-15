@@ -198,6 +198,9 @@ This project is open-source, so contributions are welcome. Just ensure that your
 4. Push to the branch (git push origin my-new-feature).
 5. Create a new Pull Request.
 
+## Motivate us!
+Do you use this plugin in an published app? Feel free to star the project and/or message me about it. It is always super-exciting to see real-world applications using this plugin, and it helps us to prioritize new features and bug fixes.
+
 ## License
 [MIT License](https://github.com/edimuj/cordova-plugin-audioinput/blob/master/LICENSE)
 
