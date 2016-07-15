@@ -208,4 +208,5 @@ Do you use this plugin in an published app? Feel free to star the project and/or
 [Enhancements](https://github.com/edimuj/cordova-plugin-audioinput/labels/enhancement)
 
 ## Credits
-The plugin is created by Edin Mujkanovic.
+* The plugin is created by Edin Mujkanovic.
+* [zyf0330](https://github.com/zyf0330)
