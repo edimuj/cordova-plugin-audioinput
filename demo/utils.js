@@ -50,4 +50,3 @@ var generateSimulatedAudioInput = function (bufferSize, numberOfIterations) {
         window.dispatchEvent(event);
     }
 };
-

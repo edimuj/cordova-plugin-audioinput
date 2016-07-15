@@ -36,6 +36,7 @@ public class AudioInputCapture extends CordovaPlugin
 	private int bufferSize = 4096;
 	private int channels = 1;
 	private String format = null;
+	private int audioSource = 0;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -52,6 +53,7 @@ public class AudioInputCapture extends CordovaPlugin
                 this.bufferSize = args.getInt(1);
                 this.channels = args.getInt(2);
                 this.format = args.getString(3);
+                this.audioSource = args.getInt(4);
 
 				promptForRecord();
             } catch (Exception e) {
@@ -139,7 +141,7 @@ public class AudioInputCapture extends CordovaPlugin
     private void promptForRecord()
     {
         if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
-	        receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format);
+	        receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource);
 	        receiver.setHandler(handler);
 	        receiver.start();
         }

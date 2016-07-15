@@ -1,10 +1,4 @@
-//
-//  CDVAudioInputCapture.m
-//  CDVAudioInputCapture
-//
-//  Created by Edin Mujkanovic on 2016-02-06.
-//
-//
+/********* CDVAudioInputCapture.m Cordova Plugin Implementation *******/
 
 #import <Cordova/CDV.h>
 #import "AudioReceiver.h"
@@ -17,7 +11,9 @@
 
 - (void)start:(CDVInvokedUrlCommand*)command;
 - (void)stop:(CDVInvokedUrlCommand*)command;
+- (void)startRecording:(CDVInvokedUrlCommand*)command;
 - (void)didReceiveAudioData:(short*)data dataLength:(int)length;
+- (void)didEncounterError:(NSString*)msg;
 
 @end
 
@@ -43,13 +39,19 @@
 {
     self.callbackId = command.callbackId;
 
+	[self startRecording:command];
+}
+
+
+- (void)startRecording:(CDVInvokedUrlCommand*)command
+{
 	int sampleRate = [[command.arguments objectAtIndex:0] intValue];
 	int bufferSizeInBytes = [[command.arguments objectAtIndex:1] intValue];
 	short channels = [[command.arguments objectAtIndex:2] intValue];
 	NSString* format = [command.arguments objectAtIndex:3];
+	int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
 
-    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels
-    audioFormat:format];
+    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType];
 
     self.audioReceiver.delegate = self;
 
@@ -77,18 +79,12 @@
 		NSMutableArray *mutableArray = [NSMutableArray arrayWithCapacity:length];
 
 		if(length == 0) {
-		    if (self.callbackId) {
-		        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-		        messageAsString:@"No data received from input device"];
-		        [result setKeepCallbackAsBool:YES];
-		        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-		    }
+			// We'll ignore these for now
 		}
 		else {
 			for (int i = 0; i < length; i++) {
 			    NSNumber *number = [[NSNumber alloc] initWithShort:data[i]];
 			    [mutableArray addObject:number];
-			    //[number release];
 			}
 
 			NSString *str = [mutableArray componentsJoinedByString:@","];
@@ -111,6 +107,30 @@
         		    }
     }
 }
+
+
+
+- (void)didEncounterError:(NSString*)msg
+{
+	@try {
+	    if (self.callbackId) {
+	        NSDictionary* errorData = [NSDictionary dictionaryWithObject:[NSString stringWithString:msg] forKey:@"error"];
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errorData];
+            [result setKeepCallbackAsBool:YES];
+            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+	    }
+    }
+    @catch (NSException *exception) {
+        if (self.callbackId) {
+        		        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+        		        messageAsString:@"Exception in didEncounterError"];
+        		        [result setKeepCallbackAsBool:YES];
+        		        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+        		    }
+    }
+}
+
+
 
 
 - (void)dealloc

@@ -75,7 +75,7 @@ var getNextToPlay = function () {
     }
 
     // Still capturing? Then call myself to continue consuming incoming data.
-    if (capturing) {
+    if (window.audioinput && audioinput.isCapturing() || capturing) {
         timerGetNextAudio = setTimeout(getNextToPlay, duration);
     }
 };
@@ -135,7 +135,7 @@ var playAudio = function (data) {
 var initWebAudio = function () {
     try {
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContext = new AudioContext();
+        audioContext = new window.AudioContext();
         consoleMessage("Web Audio Context is ready");
     }
     catch (e) {
@@ -161,67 +161,81 @@ var initUIEvents = function () {
     // Start Audio capture
     //
     document.getElementById("startCapture").addEventListener("click", function () {
-        capturing = true;
+        try {
+            if (window.audioinput && !audioinput.isCapturing() || !capturing) {
 
-        // Get the audio capture configuration from the UI elements
-        //
-        captureCfg = {
-            sampleRate: parseInt(document.getElementById('sampleRate').value),
-            bufferSize: parseInt(document.getElementById('bufferSize').value),
-            channels: parseInt(document.querySelector('input[name="channels"]:checked').value),
-            format: document.querySelector('input[name="format"]:checked').value
-        };
+                var audioSourceElement = document.getElementById("audioSource"),
+                    audioSourceType = audioSourceElement.options[audioSourceElement.selectedIndex].value;
 
-        if (isMobile.any() && window.audioinput) {
-            audioinput.start(captureCfg);
-            consoleMessage("Microphone input started!");
-        }
-        else {
-            // todo: Add Navigator.GetUserMedia() instead?
+                // Get the audio capture configuration from the UI elements
+                //
+                captureCfg = {
+                    sampleRate: parseInt(document.getElementById('sampleRate').value),
+                    bufferSize: parseInt(document.getElementById('bufferSize').value),
+                    channels: parseInt(document.querySelector('input[name="channels"]:checked').value),
+                    format: document.querySelector('input[name="format"]:checked').value,
+                    audioSourceType: parseInt(audioSourceType)
+                };
 
-            // On desktop we instead generate some audio input data
-            generateSimulatedAudioInput(captureCfg.bufferSize);
-            //timerGenerateSimulatedData = setInterval(generateSimulatedAudioInput, 100);
+                if (isMobile.any() && window.audioinput) {
+                    audioinput.start(captureCfg);
+                    consoleMessage("Microphone input started!");
+                }
+                else {
+                    // todo: Add Navigator.GetUserMedia() instead?
+                    capturing = true;
 
-            consoleMessage("Simulated input started (desktop)!");
-        }
+                    // On desktop we instead generate some audio input data
+                    generateSimulatedAudioInput(captureCfg.bufferSize);
 
-        // Start the Interval that outputs time and debug data while capturing
-        //
-        timerInterVal = setInterval(function () {
-            if (capturing) {
-                document.getElementById("infoTimer").innerHTML = "" +
-                    new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1") +
-                    "|Received:" + totalReceivedData + "|Played:" + totalPlayedData;
+                    consoleMessage("Simulated input started (desktop)!");
+                }
+
+                // Start the Interval that outputs time and debug data while capturing
+                //
+                timerInterVal = setInterval(function () {
+                    if (capturing) {
+                        document.getElementById("infoTimer").innerHTML = "" +
+                            new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1") +
+                            "|Received:" + totalReceivedData + "|Played:" + totalPlayedData;
+                    }
+                }, 1000);
+
+                // Start the audio queue consumer
+                //
+                getNextToPlay();
             }
-        }, 1000);
-
-
-        // Start the audio queue consumer
-        //
-        getNextToPlay();
+            else {
+                alert("Unavailable!");
+            }
+        }
+        catch(ex) {
+            alert("startCapture exception: " + ex);
+        }
     });
 
     // Stop Audio capture and reset everything
     //
     document.getElementById("stopCapture").addEventListener("click", function () {
 
-        capturing = false;
-        clearInterval(timerInterVal);
+        if(window.audioinput && audioinput.isCapturing() || capturing) {
+            clearInterval(timerInterVal);
 
-        if (isMobile.any() && window.audioinput) {
-            audioinput.stop();
+            if (isMobile.any() && window.audioinput) {
+                audioinput.stop();
+            }
+            else {
+                capturing = false;
+                clearInterval(timerGenerateSimulatedData);
+            }
+
+            audioDataQueue = [];
+            totalReceivedData = 0;
+            totalPlayedData = 0;
+
+            document.getElementById("infoTimer").innerHTML = "";
+            consoleMessage("Stopped");
         }
-        else {
-            clearInterval(timerGenerateSimulatedData);
-        }
-
-        audioDataQueue = [];
-        totalReceivedData = 0;
-        totalPlayedData = 0;
-
-        document.getElementById("infoTimer").innerHTML = "";
-        consoleMessage("Stopped");
     });
 };
 

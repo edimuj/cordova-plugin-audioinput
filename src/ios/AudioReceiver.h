@@ -6,7 +6,7 @@
 //
 //
 
-
+#import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #include <limits.h>
@@ -42,8 +42,7 @@ typedef struct {
 - (void)stop;
 - (void)pause;
 - (void)dealloc;
-- (AudioReceiver*)init:(int)sampleRate bufferSize:(int)bufferSizeInBytes noOfChannels:(short)channels audioFormat:
-                 (NSString*)format;
+- (AudioReceiver*)init:(int)sampleRate bufferSize:(int)bufferSizeInBytes noOfChannels:(short)channels audioFormat:(NSString*)format sourceType:(int)audioSourceType;
 - (void)didReceiveAudioData:(short*)samples dataLength:(int)length;
 - (void)hasError:(int)statusCode:(char*)file:(int)line;
 
@@ -53,5 +52,6 @@ typedef struct {
 @protocol AudioReceiverProtocol
 
 - (void)didReceiveAudioData:(short*)data dataLength:(int)length;
+- (void)didEncounterError:(NSString*)msg;
 
 @end

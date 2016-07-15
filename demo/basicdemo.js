@@ -16,7 +16,7 @@ var initUIEvents = function () {
  * @param error
  */
 function onAudioInputError(error) {
-    alert("onAudioInputError event recieved: " + JSON.stringify(error));
+    alert("audioinputerror event recieved: " + JSON.stringify(error));
 }
 
 
@@ -24,6 +24,7 @@ function onAudioInputError(error) {
  * Start Audio capture
  */
 var startCapture = function () {
+
     try {
         if (window.audioinput) {
 
@@ -51,6 +52,7 @@ var startCapture = function () {
  * Stop Audio capture
  */
 var stopCapture = function () {
+
     if (window.audioinput) {
         audioinput.stop();
     }

@@ -32,6 +32,16 @@
         <label for="format8">Format</label>
         <input type="radio" id="format8" name="format" value="PCM_8BIT"> PCM 8BIT
         <input type="radio" id="format16" name="format" value="PCM_16BIT" checked> PCM 16BIT<br>
+        <label for="audioSource">Audio Source</label>
+        <select id="audioSource">
+            <option value="0">DEFAULT (Android/iOS)</option>
+            <option value="5">CAMCORDER (Android/iOS)</option>
+            <option value="1">MIC (Android)</option>
+            <option value="9">UNPROCESSED (Android/iOS)</option>
+            <option value="7">VOICE_COMMUNICATION (Android/iOS)</option>
+            <option value="6">VOICE_RECOGNITION (Android)</option>
+        </select>
+        <br>
         <br>
         <a class="w3-btn w3-green" href="#" id="startCapture">Start Capture</a>
         <a class="w3-btn w3-red" href="#" id="stopCapture">Stop and Save</a>

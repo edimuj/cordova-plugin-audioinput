@@ -13,13 +13,22 @@ import android.util.Base64;
 
 public class AudioInputReceiver extends Thread {
 
+	private final int RECORDING_BUFFER_FACTOR = 5;
+
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
 
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 
     private int sampleRateInHz = 44100;
 
-    private int bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+    private int audioSource = 0;
+
+	// For the recording buffer
+    private int minBufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+    private int recordingBufferSize = minBufferSize * RECORDING_BUFFER_FACTOR;
+
+	// Used for reading from the AudioRecord buffer
+    private int readBufferSize = minBufferSize;
 
     private AudioRecord recorder;
 
@@ -30,10 +39,10 @@ public class AudioInputReceiver extends Thread {
     private Bundle messageBundle = new Bundle();
 
     public AudioInputReceiver() {
-        recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRateInHz, channelConfig, audioFormat, bufferSize);
+        recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
     }
 
-    public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format) {
+    public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource) {
 
 		sampleRateInHz = sampleRate;
 
@@ -53,12 +62,21 @@ public class AudioInputReceiver extends Thread {
 			audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 		}
 
-        bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
-        // Ensure that the given bufferSize isn't lower than the minimum buffer sized allowed for the current configuration
-        if (bufferSizeInBytes < bufferSize) {
-            bufferSize = bufferSizeInBytes;
+		readBufferSize = bufferSizeInBytes;
+
+		// Get the minimum recording buffer size for the specified configuration
+        minBufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+
+        // We use a recording buffer size larger than the one used for reading to avoid buffer underrun.
+        recordingBufferSize = readBufferSize * RECORDING_BUFFER_FACTOR;
+
+        // Ensure that the given recordingBufferSize isn't lower than the minimum buffer size allowed for the current configuration
+		//
+        if (recordingBufferSize < minBufferSize) {
+            recordingBufferSize = minBufferSize;
         }
-        recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRateInHz, channelConfig, audioFormat, bufferSize);
+
+        recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
     }
 
     public void setHandler(Handler handler) {
@@ -68,19 +86,18 @@ public class AudioInputReceiver extends Thread {
     @Override
     public void run() {
         int numReadBytes = 0;
-        short audioBuffer[] = new short[bufferSize];
+        short audioBuffer[] = new short[readBufferSize];
 
         synchronized(this)
         {
             recorder.startRecording();
 
             while (!isInterrupted()) {
-                numReadBytes = recorder.read(audioBuffer, 0, bufferSize);
+                numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
 
                 if (numReadBytes > 0) {
 
 					try {
-						//String decoded = Base64.encodeToString(audioBuffer,Base64.NO_WRAP);
 						String decoded = Arrays.toString(audioBuffer);
 
 	                    // send data to handler

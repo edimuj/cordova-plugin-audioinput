@@ -49,7 +49,7 @@ function onAudioInputCapture(evt) {
  * @param error
  */
 function onAudioInputError(error) {
-    alert("onAudioInputError event recieved: " + error);
+    alert("onAudioInputError event recieved: " + JSON.stringify(error));
 }
 
 
@@ -61,96 +61,104 @@ var initUIEvents = function () {
     // Start Audio capture
     //
     document.getElementById("startCapture").addEventListener("click", function () {
-        capturing = true;
 
-        // Get the audio capture configuration from the UI elements
-        //
-        captureCfg = {
-            sampleRate: parseInt(document.getElementById('sampleRate').value),
-            bufferSize: parseInt(document.getElementById('bufferSize').value),
-            channels: parseInt(document.querySelector('input[name="channels"]:checked').value),
-            format: document.querySelector('input[name="format"]:checked').value
-        };
+        if(window.audioinput && !audioinput.isCapturing() || !capturing) {
+            var audioSourceElement = document.getElementById("audioSource"),
+                audioSourceType = audioSourceElement.options[audioSourceElement.selectedIndex].value;
 
-        if (isMobile.any() && window.audioinput) {
-            audioinput.start(captureCfg);
-            consoleMessage("Microphone input started!");
+            // Get the audio capture configuration from the UI elements
+            //
+            captureCfg = {
+                sampleRate: parseInt(document.getElementById('sampleRate').value),
+                bufferSize: parseInt(document.getElementById('bufferSize').value),
+                channels: parseInt(document.querySelector('input[name="channels"]:checked').value),
+                format: document.querySelector('input[name="format"]:checked').value,
+                audioSourceType: parseInt(audioSourceType)
+            };
+
+            if (isMobile.any() && window.audioinput) {
+                audioinput.start(captureCfg);
+                consoleMessage("Microphone input started!");
+
+                // Throw previously created audio
+                document.getElementById("recording-list").innerHTML = "";
+                if (objectURL) {
+                    URL.revokeObjectURL(objectURL);
+                }
+            }
+            else {
+                // todo: Add Navigator.GetUserMedia() instead?
+                capturing = true;
+                // On desktop we instead generate some audio input data
+                generateSimulatedAudioInput(captureCfg.sampleRate, 1);
+                //timerGenerateSimulatedData = setInterval(generateSimulatedAudioInput, 100);
+
+                consoleMessage("Simulated input started (desktop)!");
+            }
+
+            // Start the Interval that outputs time and debug data while capturing
+            //
+            timerInterVal = setInterval(function () {
+                if (capturing) {
+                    document.getElementById("infoTimer").innerHTML = "" +
+                        new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1") +
+                        "|Received:" + totalReceivedData + "|Played:" + totalPlayedData;
+                }
+            }, 1000);
         }
         else {
-            // todo: Add Navigator.GetUserMedia() instead?
-
-            // On desktop we instead generate some audio input data
-            generateSimulatedAudioInput(captureCfg.sampleRate, 1);
-            //timerGenerateSimulatedData = setInterval(generateSimulatedAudioInput, 100);
-
-            consoleMessage("Simulated input started (desktop)!");
+            alert("Unavailable!");
         }
-
-        // Start the Interval that outputs time and debug data while capturing
-        //
-        timerInterVal = setInterval(function () {
-            if (capturing) {
-                document.getElementById("infoTimer").innerHTML = "" +
-                    new Date().toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, "$1") +
-                    "|Received:" + totalReceivedData + "|Played:" + totalPlayedData;
-            }
-        }, 1000);
     });
 
     // Stop Audio capture and reset everything
     //
     document.getElementById("stopCapture").addEventListener("click", function () {
         try {
-            capturing = false;
-            clearInterval(timerInterVal);
 
-            if (isMobile.any() && window.audioinput) {
-                audioinput.stop();
+            if(window.audioinput && audioinput.isCapturing() || capturing) {
+                capturing = false;
+                clearInterval(timerInterVal);
+
+                if (isMobile.any() && window.audioinput) {
+                    audioinput.stop();
+                }
+                else {
+                    clearInterval(timerGenerateSimulatedData);
+                }
+
+                // Reset
+                totalReceivedData = 0;
+                totalPlayedData = 0;
+
+                document.getElementById("infoTimer").innerHTML = "";
+
+                consoleMessage("Encoding WAV...");
+
+                var encoder = new WavAudioEncoder(captureCfg.sampleRate, captureCfg.channels);
+                encoder.encode([audioDataBuffer]);
+
+                consoleMessage("Encoding WAV finished");
+
+                var blob = encoder.finish("audio/wav");
+
+                consoleMessage("BLOB created");
+
+                var reader = new FileReader();
+
+                reader.onload = function (evt) {
+                    var audio = document.createElement("AUDIO");
+                    audio.controls = true;
+                    audio.src = evt.target.result;
+                    audio.type = "audio/wav";
+                    document.getElementById("recording-list").appendChild(audio);
+                    consoleMessage("Audio created");
+                    audioDataBuffer = [];
+                };
+
+                consoleMessage("Loading from BLOB");
+                reader.readAsDataURL(blob);
             }
-            else {
-                clearInterval(timerGenerateSimulatedData);
-            }
-
-            // Reset
-            totalReceivedData = 0;
-            totalPlayedData = 0;
-
-            document.getElementById("infoTimer").innerHTML = "";
-
-            // Throw previously created ObjectURL
-            if(objectURL) {
-                URL.revokeObjectURL(objectURL);
-            }
-
-            consoleMessage("Encoding WAV...");
-
-            var encoder = new WavAudioEncoder(captureCfg.sampleRate, captureCfg.channels);
-            encoder.encode([audioDataBuffer]);
-
-            consoleMessage("Encoding WAV finished");
-
-            var blob = encoder.finish("audio/wav");
-
-            consoleMessage("BLOB created");
-
-            //objectURL = URL.createObjectURL(blob);
-            //consoleMessage("ObjectURL created");
-
-            var reader = new FileReader();
-
-            reader.onload = function(evt){
-                var audio = document.createElement("AUDIO");
-                audio.controls = true;
-                audio.src = evt.target.result;
-                audio.type = "audio/wav";
-                document.getElementById("recording-list").innerHTML = "";
-                document.getElementById("recording-list").appendChild(audio);
-                consoleMessage("Audio created");
-                audioDataBuffer = [];
-            };
-
-            consoleMessage("Loading from BLOB");
-            reader.readAsDataURL(blob);
         }
         catch(e) {
             alert("stopCapture exception: " + e);
