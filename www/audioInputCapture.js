@@ -82,7 +82,7 @@ audioinput.start = function (cfg) {
         audioinput._cfg.normalize = typeof cfg.normalize == 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
         audioinput._cfg.normalizationFactor = cfg.normalizationFactor || audioinput.DEFAULT.NORMALIZATION_FACTOR;
         audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
-        audioinput._cfg.audioContext = cfg._audioContext || null;
+        audioinput._cfg._audioContext = cfg.audioContext || null;
         audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
         audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
 
