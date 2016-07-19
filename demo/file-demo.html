@@ -16,7 +16,7 @@
         <div class="w3-container w3-quarter"></div>
         <div class="w3-half">
             <h4>Cordova AudioInput Plugin<br>
-                WAV Demo</h4>
+                File Demo</h4>
             <div id="infoMessage"
                  class="w3-container w3-section w3-pale-green w3-bottombar w3-border-green w3-border w3-small">
                 Not ready
@@ -30,14 +30,14 @@
                     <label for="bufferSize">BufferSize (bytes)</label>
                     <input id="bufferSize" class="w3-input" type="number" value="16384" size="5"/>
                     <br>
-                    <div class="w3-row  ">
+                    <div class="w3-row">
                         <div class="w3-col m6 l6 s6">
                             <label for="channelsMono">Mono</label>
                             <input type="radio" id="channelsMono" name="channels" class="w3-input" value="1" checked>
                             <label for="channelsStereo">Stereo</label>
                             <input type="radio" id="channelsStereo" name="channels" class="w3-input" value="2">
                         </div>
-                        <div class="w3-col  m6 l6 s6">
+                        <div class="w3-col m6 l6 s6">
                             <label for="format8">8BIT</label>
                             <input type="radio" id="format8" name="format" class="w3-input" value="PCM_8BIT">
                             <label for="format16">16BIT</label>
@@ -54,15 +54,15 @@
                         <option value="6">VOICE_RECOGNITION (Android)</option>
                     </select>
                     <input id="startCapture" type="button" class="w3-btn w3-green margin-5" value="Start">
-                    <input id="stopCapture" type="button" class="w3-btn w3-red margin-5" value="Stop & Create" disabled>
+                    <input id="stopCapture" type="button" class="w3-btn w3-red margin-5" value="Stop & Save" disabled>
                     <div id="recording-list" class="w3-section w3-border-green w3-border margin-5 w3-small"
                          style="word-break: break-all;">...Recordings will show up here...
                     </div>
                 </form>
             </div>
             <i class="w3-small"><a href="https://github.com/higuma/wav-audio-encoder-js" target="_blank">WavAudioEncoder.js</a>
-                is used
-                for the WAV encoding.</i><br>
+                is used for the WAV encoding, and </i>
+            <i class="w3-small">cordova-plugin-file for saving WAV files.</i><br>
             <a class="w3-btn margin-5" href="index.html">Back</a>
         </div>
         <div class="w3-container w3-quarter"></div>
@@ -73,4 +73,4 @@
 <script type="text/javascript" src="WavAudioEncoder.min.js"></script>
 <script type="text/javascript" src="utils.js"></script>
 <script type="text/javascript" src="cordova.js"></script>
-<script type="text/javascript" src="wav-demo.js"></script>
+<script type="text/javascript" src="file-demo.js"></script>

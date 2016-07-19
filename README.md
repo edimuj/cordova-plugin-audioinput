@@ -1,5 +1,5 @@
 # cordova-plugin-audioinput
-This Cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your application.
+This Cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your web application.
 A typical usage scenario for this plugin would be to use the captured microphone audio as a source for a Web audio API based applications.
 
 Since `Navigator.getUserMedia()` still isn't supported by all browsers, this plugin provides similar functionality.
@@ -37,13 +37,16 @@ When using the event based approach, the plugin sends the following `window` eve
 After the Cordova `deviceready` event has fired:
 ```javascript
 
-// Start with default values and let the plugin handle conversion of raw data, and therefore will not send any audioinput events.
+// Start with default values and let the plugin handle conversion of 
+// raw data, and therefore will not send any audioinput events.
 // If an audio context is not provided, the plugin will create one for you.
+
 audioinput.start({
     streamToWebAudio: true
 });
 
 // Connect the audioinput to the device speakers in order to hear the captured sound.
+
 audioinput.connect(audioinput.getAudioContext().destination);
 
 ```
@@ -81,7 +84,8 @@ After the Cordova `deviceready` event has fired:
 
 // Start capturing audio from the microphone
 audioinput.start({
-    bufferSize: 8192 // Here we've changed the bufferSize from the default to 8192 bytes
+    // Here we've changed the bufferSize from the default to 8192 bytes.
+    bufferSize: 8192 
 });
 
 // Stop capturing audio input
@@ -92,11 +96,12 @@ audioinput.stop()
 ## Demos
 The `demo` folder contains some usage examples.
 
-Remember that unfiltered microphone output likely will create a nasty audio feedback loop so lower the volume before trying out the demos!
+Remember that unfiltered microphone output likely will create a nasty audio feedback loop, so lower the volume before trying out the demos!
 
-basicdemo - How to use the audioinput object as a Web Audio API AudioNode that can be connected to your own chain of AudioNodes.
-advanceddemo - How to subscribe to the audioinput events to get and handle chunks of raw audio data.
-wav-demo - How to encode recorded data to WAV format and use the resulting file as a source for Audio elements.
+* webaudio-demo - How to use the audioinput object as a Web Audio API AudioNode that can be connected to your own chain of AudioNodes.
+* events-demo - How to subscribe to the audioinput events to get and handle chunks of raw audio data.
+* wav-demo - How to encode recorded data to WAV format and use the resulting blob as a source for Audio elements.
+* file-demo - How to encode recorded data to WAV format and save the resulting blob as a file.
 
 ## API
 **Start capturing audio** from the microphone.
@@ -122,7 +127,8 @@ var captureCfg = {
     channels: audioinput.CHANNELS.MONO,
     
     // The audio format. Currently PCM_16BIT and PCM_8BIT are supported.
-    // For convenience, use the audioinput.FORMAT constant to access the possible formats that the plugin supports.
+    // For convenience, use the audioinput.FORMAT constant to access the possible 
+    // formats that the plugin supports.
     format: audioinput.FORMAT.PCM_16BIT,
     
     // Specifies if the audio data should be normalized or not.
@@ -131,28 +137,27 @@ var captureCfg = {
     // Specifies the factor to use if normalization is performed.
     normalizationFactor: 32767.0,
     
-    // If set to true, the plugin will handle all conversion of the data to web audio.
-    // The plugin can then act as an AudioNode that can be connected to your web audio node chain.
+    // If set to true, the plugin will handle all conversion of the data to 
+    // web audio. The plugin can then act as an AudioNode that can be connected 
+    // to your web audio node chain.
     streamToWebAudio: false,
     
-    // Used in conjunction with streamToWebAudio. If no audioContext is given, one (prefixed) will be created by the plugin.
+    // Used in conjunction with streamToWebAudio. If no audioContext is given, 
+    // one (prefixed) will be created by the plugin.
     audioContext: null,
     
-    // Defines how many chunks will be merged each time, a low value means lower latency but requires more CPU resources.
-    concatenateMaxChunks: 10
+    // Defines how many chunks will be merged each time, a low value means lower latency
+    // but requires more CPU resources.
+    concatenateMaxChunks: 10,
     
-    /* 
-    Specifies the type of the type of source audio your app requires.
-    For convenience, use the audioinput.AUDIOSOURCE_TYPE constants to set this parameter.
-    
-    audioinput.AUDIOSOURCE_TYPE.DEFAULT
-    audioinput.AUDIOSOURCE_TYPE.CAMCORDER - Microphone audio source with same orientation as camera if available.
-    audioinput.AUDIOSOURCE_TYPE.MIC - Microphone audio source. (Android only)
-    audioinput.AUDIOSOURCE_TYPE.UNPROCESSED - Unprocessed sound if available.
-    audioinput.AUDIOSOURCE_TYPE.VOICE_COMMUNICATION - Tuned for voice communications such as VoIP.
-    audioinput.AUDIOSOURCE_TYPE.VOICE_RECOGNITION - Tuned for voice recognition if available (Android only)
-    
-    */
+    // Specifies the type of the type of source audio your app requires.
+    // For convenience, use the audioinput.AUDIOSOURCE_TYPE constants to set this parameter:
+    // -DEFAULT
+    // -CAMCORDER - Microphone audio source with same orientation as camera if available.
+    // -UNPROCESSED - Unprocessed sound if available.
+    // -VOICE_COMMUNICATION - Tuned for voice communications such as VoIP.
+    // -MIC - Microphone audio source. (Android only)
+    // -VOICE_RECOGNITION - Tuned for voice recognition if available (Android only)
     audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT
     
 };
@@ -189,6 +194,9 @@ When using `streamToWebAudio`, and have not supplied the plugin with an Audio co
 audioinput.getAudioContext();
 ```
 
+## Motivate us!
+Do you use this plugin in an published app? Feel free to star the project and/or message me about it. It is always super-exciting to see real-world applications using this plugin, and it helps us to prioritize new features and bug fixes.
+
 ## Contributing
 This project is open-source, so contributions are welcome. Just ensure that your changes doesn't break backward compatibility!
 
@@ -198,15 +206,14 @@ This project is open-source, so contributions are welcome. Just ensure that your
 4. Push to the branch (git push origin my-new-feature).
 5. Create a new Pull Request.
 
-## Motivate us!
-Do you use this plugin in an published app? Feel free to star the project and/or message me about it. It is always super-exciting to see real-world applications using this plugin, and it helps us to prioritize new features and bug fixes.
-
-## License
-[MIT License](https://github.com/edimuj/cordova-plugin-audioinput/blob/master/LICENSE)
-
 ## Todo list
 [Enhancements](https://github.com/edimuj/cordova-plugin-audioinput/labels/enhancement)
 
 ## Credits
 * The plugin is created by Edin Mujkanovic.
-* [zyf0330](https://github.com/zyf0330)
+
+* [zyf0330](https://github.com/zyf0330) 
+* [Tattomoosa](https://github.com/Tattomoosa)
+
+## License
+[MIT License](https://github.com/edimuj/cordova-plugin-audioinput/blob/master/LICENSE)

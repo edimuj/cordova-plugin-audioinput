@@ -1,6 +1,6 @@
 /*
- This demo shows how to collect the raw microphone data, encode it into WAV format and then use the resulting blob
- as src for a HTML Audio element. No Web Audio API support is needed for this to work.
+ This demo shows how to collect the raw microphone data, encode it into WAV format and then save the resulting blob
+ to a file using cordova-plugin-file. No Web Audio API support is needed for this to work.
  */
 
 // Capture configuration object
@@ -20,7 +20,6 @@ var totalReceivedData = 0;
 // URL shim
 window.URL = window.URL || window.webkitURL;
 
-
 /**
  * Called continuously while AudioInput capture is running.
  */
@@ -32,9 +31,6 @@ function onAudioInputCapture(evt) {
 
             // Add the chunk to the buffer
             audioDataBuffer = audioDataBuffer.concat(evt.data);
-        }
-        else {
-            alert("Unknown audioinput event!");
         }
     }
     catch (ex) {
@@ -60,8 +56,6 @@ var startCapture = function () {
             var audioSourceElement = document.getElementById("audioSource"),
                 audioSourceType = audioSourceElement.options[audioSourceElement.selectedIndex].value;
 
-            // Get the audio capture configuration from the UI elements
-            //
             captureCfg = {
                 sampleRate: parseInt(document.getElementById('sampleRate').value),
                 bufferSize: parseInt(document.getElementById('bufferSize').value),
@@ -70,13 +64,12 @@ var startCapture = function () {
                 audioSourceType: parseInt(audioSourceType)
             };
 
-
             audioinput.start(captureCfg);
             consoleMessage("Microphone input started!");
 
             // Throw previously created audio
             document.getElementById("recording-list").innerHTML = "";
-            if (objectURL && URL.revokeObjectURL) {
+            if (objectURL) {
                 URL.revokeObjectURL(objectURL);
             }
 
@@ -105,12 +98,16 @@ var startCapture = function () {
 var stopCapture = function () {
     try {
         if (window.audioinput && audioinput.isCapturing()) {
+
             if (timerInterVal) {
                 clearInterval(timerInterVal);
             }
 
-            if (window.audioinput) {
+            if (isMobile.any() && window.audioinput) {
                 audioinput.stop();
+            }
+            else {
+                clearInterval(timerGenerateSimulatedData);
             }
 
             totalReceivedData = 0;
@@ -123,23 +120,29 @@ var stopCapture = function () {
             consoleMessage("Encoding WAV finished");
 
             var blob = encoder.finish("audio/wav");
-
             consoleMessage("BLOB created");
 
-            var reader = new FileReader();
+            window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function (dir) {
+                var fileName = new Date().YYYYMMDDHHMMSS() + ".wav";
+                dir.getFile(fileName, {create: true}, function (file) {
+                    file.createWriter(function (fileWriter) {
+                        fileWriter.write(blob);
 
-            reader.onload = function (evt) {
-                var audio = document.createElement("AUDIO");
-                audio.controls = true;
-                audio.src = evt.target.result;
-                audio.type = "audio/wav";
-                document.getElementById("recording-list").appendChild(audio);
-                consoleMessage("Audio created");
-                audioDataBuffer = [];
-            };
+                        // Add an URL for the file
+                        var a = document.createElement('a');
+                        var linkText = document.createTextNode(file.toURL());
+                        a.appendChild(linkText);
+                        a.title = file.toURL();
+                        a.href = file.toURL();
+                        a.target = '_blank';
+                        document.getElementById("recording-list").appendChild(a);
 
-            consoleMessage("Loading from BLOB");
-            reader.readAsDataURL(blob);
+                        consoleMessage("File created!");
+                    }, function () {
+                        alert("FileWriter error!");
+                    });
+                });
+            });
 
             disableStopButton();
         }
@@ -163,7 +166,9 @@ var initUIEvents = function () {
  * When cordova fires the deviceready event, we initialize everything needed for audio input.
  */
 var onDeviceReady = function () {
-    if (window.cordova && window.audioinput) {
+
+    if (window.cordova && window.cordova.file && window.audioinput) {
+
         initUIEvents();
 
         consoleMessage("Use 'Start Capture' to begin...");
@@ -174,7 +179,7 @@ var onDeviceReady = function () {
         window.addEventListener('audioinputerror', onAudioInputError, false);
     }
     else {
-        consoleMessage("cordova-plugin-audioinput not found!");
+        consoleMessage("Missing: cordova-plugin-file or cordova-plugin-audioinput!");
         disableAllButtons();
     }
 };

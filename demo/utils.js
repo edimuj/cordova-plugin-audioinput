@@ -50,3 +50,35 @@ var generateSimulatedAudioInput = function (bufferSize, numberOfIterations) {
         window.dispatchEvent(event);
     }
 };
+
+/**
+ * Get a formatted YYYYMMDDHHMMSS string from the date
+ * @returns {*}
+ */
+Date.prototype.YYYYMMDDHHMMSS = function () {
+    function pad2(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    return this.getFullYear() +
+        pad2(this.getMonth() + 1) +
+        pad2(this.getDate()) +
+        pad2(this.getHours()) +
+        pad2(this.getMinutes()) +
+        pad2(this.getSeconds());
+};
+
+var disableStartButton = function() {
+    document.getElementById("startCapture").disabled = true;
+    document.getElementById("stopCapture").disabled = false;
+};
+
+var disableStopButton = function() {
+    document.getElementById("startCapture").disabled = false;
+    document.getElementById("stopCapture").disabled = true;
+};
+
+var disableAllButtons = function() {
+    document.getElementById("startCapture").disabled = true;
+    document.getElementById("stopCapture").disabled = true;
+};

@@ -39,17 +39,17 @@
 {
     self.callbackId = command.callbackId;
 
-	[self startRecording:command];
+    [self startRecording:command];
 }
 
 
 - (void)startRecording:(CDVInvokedUrlCommand*)command
 {
-	int sampleRate = [[command.arguments objectAtIndex:0] intValue];
-	int bufferSizeInBytes = [[command.arguments objectAtIndex:1] intValue];
-	short channels = [[command.arguments objectAtIndex:2] intValue];
-	NSString* format = [command.arguments objectAtIndex:3];
-	int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
+    int sampleRate = [[command.arguments objectAtIndex:0] intValue];
+    int bufferSizeInBytes = [[command.arguments objectAtIndex:1] intValue];
+    short channels = [[command.arguments objectAtIndex:2] intValue];
+    NSString* format = [command.arguments objectAtIndex:3];
+    int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
 
     self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType];
 
@@ -61,73 +61,79 @@
 
 - (void)stop:(CDVInvokedUrlCommand*)command
 {
-	[self.audioReceiver stop];
+    [self.commandDelegate runInBackground:^{
+        [self.audioReceiver stop];
 
-    if (self.callbackId) {
-        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:0.0f];
-        [result setKeepCallbackAsBool:NO];
-        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-    }
+        if (self.callbackId) {
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:0.0f];
+            [result setKeepCallbackAsBool:NO];
+            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+        }
 
-    self.callbackId = nil;
+        self.callbackId = nil;
+    }];
 }
 
 
 - (void)didReceiveAudioData:(short*)data dataLength:(int)length
 {
-	@try {
-		NSMutableArray *mutableArray = [NSMutableArray arrayWithCapacity:length];
+    [self.commandDelegate runInBackground:^{
+        @try {
+            NSMutableArray *mutableArray = [NSMutableArray arrayWithCapacity:length];
 
-		if(length == 0) {
-			// We'll ignore these for now
-		}
-		else {
-			for (int i = 0; i < length; i++) {
-			    NSNumber *number = [[NSNumber alloc] initWithShort:data[i]];
-			    [mutableArray addObject:number];
-			}
+            if(length == 0) {
+                // We'll ignore empty data for now
+            }
+            else {
+                for (int i = 0; i < length; i++) {
+                    NSNumber *number = [[NSNumber alloc] initWithShort:data[i]];
+                    [mutableArray addObject:number];
+                }
 
-			NSString *str = [mutableArray componentsJoinedByString:@","];
-			NSString *dataStr = [NSString stringWithFormat:@"[%@]", str];
-		    NSDictionary* audioData = [NSDictionary dictionaryWithObject:[NSString stringWithString:dataStr] forKey:@"data"];
+                NSString *str = [mutableArray componentsJoinedByString:@","];
+                NSString *dataStr = [NSString stringWithFormat:@"[%@]", str];
+                NSDictionary* audioData = [NSDictionary dictionaryWithObject:[NSString stringWithString:dataStr] forKey:@"data"];
 
-		    if (self.callbackId) {
-		        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:audioData];
-		        [result setKeepCallbackAsBool:YES];
-		        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-		    }
-		}
-    }
-    @catch (NSException *exception) {
-        if (self.callbackId) {
-        		        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-        		        messageAsString:@"Exception in didReceiveAudioData"];
-        		        [result setKeepCallbackAsBool:YES];
-        		        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-        		    }
-    }
+                if (self.callbackId) {
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:audioData];
+                    [result setKeepCallbackAsBool:YES];
+                    [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+                }
+            }
+        }
+        @catch (NSException *exception) {
+            if (self.callbackId) {
+                            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                            messageAsString:@"Exception in didReceiveAudioData"];
+                            [result setKeepCallbackAsBool:YES];
+                            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+                        }
+        }
+    }];
 }
 
 
 
 - (void)didEncounterError:(NSString*)msg
 {
-	@try {
-	    if (self.callbackId) {
-	        NSDictionary* errorData = [NSDictionary dictionaryWithObject:[NSString stringWithString:msg] forKey:@"error"];
-            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errorData];
-            [result setKeepCallbackAsBool:YES];
-            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-	    }
-    }
-    @catch (NSException *exception) {
-        if (self.callbackId) {
-        		        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-        		        messageAsString:@"Exception in didEncounterError"];
-        		        [result setKeepCallbackAsBool:YES];
-        		        [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
-        		    }
-    }
+    [self.commandDelegate runInBackground:^{
+        @try {
+            if (self.callbackId) {
+                NSDictionary* errorData = [NSDictionary dictionaryWithObject:[NSString stringWithString:msg] forKey:@"error"];
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errorData];
+                [result setKeepCallbackAsBool:YES];
+                [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+            }
+        }
+        @catch (NSException *exception) {
+            if (self.callbackId) {
+                            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                            messageAsString:@"Exception in didEncounterError"];
+                            [result setKeepCallbackAsBool:YES];
+                            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+                        }
+        }
+    }];
 }
 
 

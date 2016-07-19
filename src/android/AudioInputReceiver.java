@@ -13,29 +13,22 @@ import android.util.Base64;
 
 public class AudioInputReceiver extends Thread {
 
-	private final int RECORDING_BUFFER_FACTOR = 5;
-
+    private final int RECORDING_BUFFER_FACTOR = 5;
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;
-
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-
     private int sampleRateInHz = 44100;
-
     private int audioSource = 0;
 
-	// For the recording buffer
+    // For the recording buffer
     private int minBufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
     private int recordingBufferSize = minBufferSize * RECORDING_BUFFER_FACTOR;
 
-	// Used for reading from the AudioRecord buffer
+    // Used for reading from the AudioRecord buffer
     private int readBufferSize = minBufferSize;
 
     private AudioRecord recorder;
-
     private Handler handler;
-
     private Message message;
-
     private Bundle messageBundle = new Bundle();
 
     public AudioInputReceiver() {
@@ -43,35 +36,34 @@ public class AudioInputReceiver extends Thread {
     }
 
     public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource) {
+        sampleRateInHz = sampleRate;
 
-		sampleRateInHz = sampleRate;
-
-		switch (channels) {
+        switch (channels) {
             case 2:
                 channelConfig = AudioFormat.CHANNEL_IN_STEREO;
                 break;
-			case 1:
+            case 1:
             default:
                 channelConfig = AudioFormat.CHANNEL_IN_MONO;
                 break;
         }
-		if(format == "PCM_8BIT") {
-			audioFormat = AudioFormat.ENCODING_PCM_8BIT;
-		}
-		else {
-			audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-		}
+        if(format == "PCM_8BIT") {
+            audioFormat = AudioFormat.ENCODING_PCM_8BIT;
+        }
+        else {
+            audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        }
 
-		readBufferSize = bufferSizeInBytes;
+        readBufferSize = bufferSizeInBytes;
 
-		// Get the minimum recording buffer size for the specified configuration
+        // Get the minimum recording buffer size for the specified configuration
         minBufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
 
         // We use a recording buffer size larger than the one used for reading to avoid buffer underrun.
         recordingBufferSize = readBufferSize * RECORDING_BUFFER_FACTOR;
 
         // Ensure that the given recordingBufferSize isn't lower than the minimum buffer size allowed for the current configuration
-		//
+        //
         if (recordingBufferSize < minBufferSize) {
             recordingBufferSize = minBufferSize;
         }
@@ -88,29 +80,26 @@ public class AudioInputReceiver extends Thread {
         int numReadBytes = 0;
         short audioBuffer[] = new short[readBufferSize];
 
-        synchronized(this)
-        {
+        synchronized(this) {
             recorder.startRecording();
 
             while (!isInterrupted()) {
                 numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
 
                 if (numReadBytes > 0) {
+                    try {
+                        String decoded = Arrays.toString(audioBuffer);
 
-					try {
-						String decoded = Arrays.toString(audioBuffer);
-
-	                    // send data to handler
-	                    message = handler.obtainMessage();
-	                    messageBundle.putString("data", decoded);
-	                    message.setData(messageBundle);
-	                    handler.sendMessage(message);
+                        message = handler.obtainMessage();
+                        messageBundle.putString("data", decoded);
+                        message.setData(messageBundle);
+                        handler.sendMessage(message);
                     }
                     catch(Exception ex) {
-	                    message = handler.obtainMessage();
-	                    messageBundle.putString("error", ex.toString());
-	                    message.setData(messageBundle);
-	                    handler.sendMessage(message);
+                        message = handler.obtainMessage();
+                        messageBundle.putString("error", ex.toString());
+                        message.setData(messageBundle);
+                        handler.sendMessage(message);
                     }
                 }
             }

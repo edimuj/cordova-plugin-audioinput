@@ -10,7 +10,7 @@
 
 
 /**
-	Audio Input callback
+    Audio Input callback
  */
 void HandleInputBuffer(void* inUserData,
                        AudioQueueRef inAQ,
@@ -39,51 +39,51 @@ void HandleInputBuffer(void* inUserData,
 
     AudioQueueEnqueueBuffer(pRecordState->mQueue, inBuffer, 0, NULL);
 
-	[pRecordState->mSelf didReceiveAudioData:samples dataLength:(int)nsamples];
+    [pRecordState->mSelf didReceiveAudioData:samples dataLength:(int)nsamples];
 }
 
 
 
 /**
-	AudioReceiver class implementation
+    AudioReceiver class implementation
  */
 @implementation AudioReceiver
 
 @synthesize mySampleRate, myBufferSize, myChannels, myBitRate, myFormat, delegate;
 
 /**
-	Init instance
+    Init instance
  */
 - (AudioReceiver*)init:(int)sampleRate bufferSize:(int)bufferSizeInBytes noOfChannels:(short)channels audioFormat:(NSString*)format sourceType:(int)audioSourceType
 {
 	static const int maxBufferSize = 0x100000;
 
     if (self) {
-		OSStatus status = noErr;
+        OSStatus status = noErr;
 
-		AVAudioSession* avSession = [AVAudioSession sharedInstance];
+        AVAudioSession* avSession = [AVAudioSession sharedInstance];
 
-		NSError *setCategoryError = nil;
-		if (![avSession setCategory:AVAudioSessionCategoryPlayAndRecord
+        NSError *setCategoryError = nil;
+        if (![avSession setCategory:AVAudioSessionCategoryPlayAndRecord
          withOptions:AVAudioSessionCategoryOptionMixWithOthers
          error:&setCategoryError]) {
-	        // handle error?
-		}
+            // handle error?
+        }
 
-		if(audioSourceType == 7) {
-			[avSession setMode:AVAudioSessionModeVoiceChat error:nil];
-		}
-		else if(audioSourceType == 5) {
-			[avSession setMode:AVAudioSessionModeVideoRecording error:nil];
-		}
-		else if(audioSourceType == 9) {
-			[avSession setMode:AVAudioSessionModeMeasurement error:nil];
-		}
-		else {
-			[avSession setMode:AVAudioSessionModeDefault error:nil];
-		}
+        if(audioSourceType == 7) {
+            [avSession setMode:AVAudioSessionModeVoiceChat error:nil];
+        }
+        else if(audioSourceType == 5) {
+            [avSession setMode:AVAudioSessionModeVideoRecording error:nil];
+        }
+        else if(audioSourceType == 9) {
+            [avSession setMode:AVAudioSessionModeMeasurement error:nil];
+        }
+        else {
+            [avSession setMode:AVAudioSessionModeDefault error:nil];
+        }
 
-		int bitRate = 16;
+        int bitRate = 16;
         if([format isEqualToString:@"PCM_8BIT"]){
             bitRate = 8;
         }
@@ -93,7 +93,7 @@ void HandleInputBuffer(void* inUserData,
         _recordState.mDataFormat.mBitsPerChannel = bitRate;
         _recordState.mDataFormat.mChannelsPerFrame = channels;
         _recordState.mDataFormat.mFramesPerPacket = 1;
-        _recordState.mDataFormat.mBytesPerFrame = _recordState.mDataFormat.mBytesPerPacket = _recordState.mDataFormat.mChannelsPerFrame * sizeof(SInt16);
+        _recordState.mDataFormat.mBytesPerPacket =_recordState.mDataFormat.mBytesPerFrame = (_recordState.mDataFormat.mBitsPerChannel / 8) * _recordState.mDataFormat.mChannelsPerFrame;
         _recordState.mDataFormat.mReserved = 0;
         _recordState.mDataFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
         _recordState.bufferByteSize = (UInt32) MIN(bufferSizeInBytes, maxBufferSize);
@@ -104,15 +104,15 @@ void HandleInputBuffer(void* inUserData,
 
 
 /**
-	Start Audio Input capture
+    Start Audio Input capture
  */
 - (void)start {
-	[self startRecording];
+    [self startRecording];
 }
 
 
 - (void) startRecording{
-	OSStatus status = noErr;
+    OSStatus status = noErr;
 
     _recordState.mCurrentPacket = 0;
     _recordState.mSelf = self;
@@ -124,7 +124,7 @@ void HandleInputBuffer(void* inUserData,
                                 kCFRunLoopCommonModes,
                                 0,
                                 &_recordState.mQueue);
-	[self hasError:status:__FILE__:__LINE__];
+    [self hasError:status:__FILE__:__LINE__];
 
     for (int i = 0; i < kNumberBuffers; i++) {
         status = AudioQueueAllocateBuffer(_recordState.mQueue, _recordState.bufferByteSize, &_recordState.mBuffers[i]);
@@ -136,11 +136,11 @@ void HandleInputBuffer(void* inUserData,
 
     _recordState.mIsRunning = YES;
     status = AudioQueueStart(_recordState.mQueue, NULL);
-	[self hasError:status:__FILE__:__LINE__];
+    [self hasError:status:__FILE__:__LINE__];
 }
 
 /**
-	Stop Audio Input capture
+    Stop Audio Input capture
  */
 - (void)stop {
     if (_recordState.mIsRunning) {
@@ -151,7 +151,7 @@ void HandleInputBuffer(void* inUserData,
 
 
 /**
-	Pause Audio Input capture
+    Pause Audio Input capture
  */
 - (void)pause {
     AudioQueuePause(_recordState.mQueue);
@@ -159,7 +159,7 @@ void HandleInputBuffer(void* inUserData,
 
 
 /**
-	Deallocate audio queue
+    Deallocate audio queue
  */
 - (void)dealloc {
     AudioQueueDispose(_recordState.mQueue, true);
@@ -167,22 +167,22 @@ void HandleInputBuffer(void* inUserData,
 
 
 /**
-	Forward sample data
+    Forward sample data
  */
 - (void)didReceiveAudioData:(short*)samples dataLength:(int)length {
-	[self.delegate didReceiveAudioData:samples dataLength:length];
+    [self.delegate didReceiveAudioData:samples dataLength:length];
 }
 
 
 /**
-	Debug
+    Debug
  */
 -(void)hasError:(int)statusCode:(char*)file:(int)line
 {
-	if (statusCode) {
-		NSLog(@"Error Code responded %d in file %s on line %d\n", statusCode, file, line);
+    if (statusCode) {
+        NSLog(@"Error Code responded %d in file %s on line %d\n", statusCode, file, line);
         exit(-1);
-	}
+    }
 }
 
 

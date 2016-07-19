@@ -28,15 +28,15 @@ typedef struct {
 
 @interface AudioReceiver : NSObject
 
-	@property (nonatomic, assign) id delegate;
+    @property (nonatomic, assign) id delegate;
 
-	@property (nonatomic, assign) AQRecordState recordState;
+    @property (nonatomic, assign) AQRecordState recordState;
 
-	@property (nonatomic) int mySampleRate;
-	@property (nonatomic) int myBufferSize;
-	@property (nonatomic) short myChannels;
-	@property (nonatomic) short myBitRate;
-	@property (nonatomic) NSString* myFormat;
+    @property (nonatomic) int mySampleRate;
+    @property (nonatomic) int myBufferSize;
+    @property (nonatomic) short myChannels;
+    @property (nonatomic) short myBitRate;
+    @property (nonatomic) NSString* myFormat;
 
 - (void)start;
 - (void)stop;
