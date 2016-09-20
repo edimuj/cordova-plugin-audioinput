@@ -194,8 +194,15 @@ When using `streamToWebAudio`, and have not supplied the plugin with an Audio co
 audioinput.getAudioContext();
 ```
 
+## Related projects
+* The [speechcapture](https://github.com/edimuj/speechcapture) javascript library can be used together with this plugin to detect speech events, as well as capturing the audio: [speechcapture on github](https://github.com/edimuj/speechcapture).
+
 ## Motivate us!
 Do you use this plugin in an published app? Feel free to star the project and/or message me about it. It is always super-exciting to see real-world applications using this plugin, and it helps us to prioritize new features and bug fixes.
+
+And if you find this plugin useful, ensure that it is kept alive by donating:
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=R9WGMBB2BMS34)
 
 ## Contributing
 This project is open-source, so contributions are welcome. Just ensure that your changes doesn't break backward compatibility!
