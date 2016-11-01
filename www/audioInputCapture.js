@@ -1,4 +1,6 @@
-cordova.define("cordova-plugin-audioinput.AudioInput", function(require, exports, module) {
+// Antony Zhu
+// With configurable path and filename
+
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
     exec = require('cordova/exec'),
@@ -390,5 +392,3 @@ audioinput._dequeueAudioData = function () {
 };
 
 module.exports = audioinput;
-
-});
