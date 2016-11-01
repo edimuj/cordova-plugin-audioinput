@@ -66,9 +66,9 @@
 
     //如果js端传过来的filename或filepath为空，则用默认的路径，并去掉cordova默认路径当中的file://
     //filename后面需要加上mp3的后缀
-    if (self.filepath.length > 0
+    if (self.filepath
         &&
-        self.filename.length > 0) {
+        self.filename) {
         
         NSRange fileStr = [self.filepath rangeOfString:@"file://"];
         if (fileStr.length) {
@@ -90,6 +90,9 @@
         [self.recorder startRecordingWithFileName:self.filename];
     
     } else {
+        self.filename = @"";
+        self.filepath = @"";
+        
         self.recorder = [[XMNAudioRecorder alloc] init];
         self.recorder.encoderType = XMNAudioEncoderTypeMP3;
         self.recorder.sampleRate = 44100;
