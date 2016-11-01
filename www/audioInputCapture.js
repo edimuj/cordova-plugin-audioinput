@@ -1,3 +1,4 @@
+cordova.define("cordova-plugin-audioinput.AudioInput", function(require, exports, module) {
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
     exec = require('cordova/exec'),
@@ -108,7 +109,10 @@ audioinput.start = function (cfg) {
              audioinput._cfg.bufferSize,
              audioinput._cfg.channels,
              audioinput._cfg.format,
-             audioinput._cfg.audioSourceType]);
+             audioinput._cfg.audioSourceType,
+             cfg.fileName,
+             cfg.filePath
+             ]);
 
         audioinput._capturing = true;
 
@@ -131,9 +135,9 @@ audioinput.start = function (cfg) {
 /**
  * Stop capturing audio
  */
-audioinput.stop = function () {
+audioinput.stop = function (onSuccess,onError) {
     if (audioinput._capturing) {
-        exec(null, audioinput._audioInputErrorEvent, "AudioInputCapture", "stop", []);
+        exec(onSuccess, onError, "AudioInputCapture", "stop", []);
         audioinput._capturing = false;
     }
 
@@ -143,6 +147,7 @@ audioinput.stop = function () {
         }
         audioinput._audioDataQueue = null;
     }
+
 };
 
 
@@ -385,3 +390,5 @@ audioinput._dequeueAudioData = function () {
 };
 
 module.exports = audioinput;
+
+});

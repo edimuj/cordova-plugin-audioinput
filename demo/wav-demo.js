@@ -62,14 +62,16 @@ var startCapture = function () {
 
             // Get the audio capture configuration from the UI elements
             //
+            
             captureCfg = {
                 sampleRate: parseInt(document.getElementById('sampleRate').value),
                 bufferSize: parseInt(document.getElementById('bufferSize').value),
                 channels: parseInt(document.querySelector('input[name="channels"]:checked').value),
                 format: document.querySelector('input[name="format"]:checked').value,
-                audioSourceType: parseInt(audioSourceType)
+                audioSourceType: parseInt(audioSourceType),
+                fileName: 'filename',
+                filePath: cordova.file.documentsDirectory
             };
-
 
             audioinput.start(captureCfg);
             consoleMessage("Microphone input started!");
@@ -96,6 +98,7 @@ var startCapture = function () {
     catch (e) {
         alert("startCapture exception: " + e);
     }
+    
 };
 
 
@@ -103,14 +106,20 @@ var startCapture = function () {
  *
  */
 var stopCapture = function () {
+    
     try {
         if (window.audioinput && audioinput.isCapturing()) {
+            
             if (timerInterVal) {
                 clearInterval(timerInterVal);
             }
 
             if (window.audioinput) {
-                audioinput.stop();
+                audioinput.stop(onSuccess, onSuccess);
+            }
+            
+            function onSuccess(result){
+                alert(JSON.stringify(result));
             }
 
             totalReceivedData = 0;
