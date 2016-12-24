@@ -101,7 +101,7 @@ Remember that unfiltered microphone output likely will create a nasty audio feed
 * webaudio-demo - How to use the audioinput object as a Web Audio API AudioNode that can be connected to your own chain of AudioNodes.
 * events-demo - How to subscribe to the audioinput events to get and handle chunks of raw audio data.
 * wav-demo - How to encode recorded data to WAV format and use the resulting blob as a source for Audio elements.
-* file-demo - How to encode recorded data to WAV format and save the resulting blob as a file.
+* file-demo - How to encode recorded data to WAV format and save the resulting blob as a file. To run this demo ```cordova plugin add cordova-plugin-file``` is required.
 
 ## API
 **Start capturing audio** from the microphone.
