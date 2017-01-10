@@ -1,4 +1,15 @@
 # cordova-plugin-audioinput
+
+## This fork (iOS code changed)
+
+This fork from [edimuj/cordova-plugin-audioinput](https://github.com/ddddm/cordova-plugin-audioinput) is made to active/deactivate [AVAudioSession](https://developer.apple.com/reference/avfoundation/avaudiosession?language=objc) in iOS part of this plugin.
+
+Problem (iOS only): if plugin was used while app is running, all audio output will go through the front facing speaker, not through the main speaker, even if you ```audioinput.stop()``` 
+
+Solution: use AVAudioSession's ```setActive``` method to enable\disable audio session.
+
+---
+
 This Cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your web application.
 A typical usage scenario for this plugin would be to use the captured microphone audio as a source for a Web audio API based applications.
 
