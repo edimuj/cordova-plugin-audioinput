@@ -1,5 +1,4 @@
 # cordova-plugin-audioinput
-
 This Cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your web application.
 A typical usage scenario for this plugin would be to use the captured microphone audio as a source for a Web audio API based applications.
 
