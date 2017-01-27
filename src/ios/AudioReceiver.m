@@ -117,9 +117,6 @@ void HandleInputBuffer(void* inUserData,
     _recordState.mCurrentPacket = 0;
     _recordState.mSelf = self;
 
-    AVAudioSession* avSession = [AVAudioSession sharedInstance];
-    [avSession setActive:YES error:nil];
-
     status = AudioQueueNewInput(&_recordState.mDataFormat,
                                 HandleInputBuffer,
                                 &_recordState,
@@ -149,10 +146,6 @@ void HandleInputBuffer(void* inUserData,
     if (_recordState.mIsRunning) {
         AudioQueueStop(_recordState.mQueue, true);
         _recordState.mIsRunning = false;
-
-        AVAudioSession* avSession = [AVAudioSession sharedInstance];
-        [avSession setActive:NO error:nil];
-
     }
 }
 
