@@ -167,6 +167,7 @@ public class AudioInputReceiver extends Thread {
 		os.close();
 		File wav = new File(fileUrl);
 		addWavHeader(audioFile, wav);
+		audioFile.delete();
 		message = handler.obtainMessage();
 		messageBundle = new Bundle();
 		messageBundle.putString("file", wav.toURI().toString());
