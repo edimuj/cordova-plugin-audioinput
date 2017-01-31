@@ -8,6 +8,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import java.util.Arrays;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+import java.net.URI;
 
 import android.util.Base64;
 
@@ -30,12 +38,13 @@ public class AudioInputReceiver extends Thread {
     private Handler handler;
     private Message message;
     private Bundle messageBundle = new Bundle();
+    private URI fileUrl;
 
     public AudioInputReceiver() {
         recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
     }
 
-    public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource) {
+   public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource, URI fileUrl) {
         sampleRateInHz = sampleRate;
 
         switch (channels) {
@@ -69,6 +78,7 @@ public class AudioInputReceiver extends Thread {
         }
 
         recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
+	this.fileUrl = fileUrl;
     }
 
     public void setHandler(Handler handler) {
@@ -77,39 +87,182 @@ public class AudioInputReceiver extends Thread {
 
     @Override
     public void run() {
+       if (fileUrl == null) {
         int numReadBytes = 0;
-        short audioBuffer[] = new short[readBufferSize];
-
+        // byte audioBuffer[] = new byte[readBufferSize];
+	short audioBuffer[] = new short[readBufferSize];
         synchronized(this) {
             recorder.startRecording();
 
-            while (!isInterrupted()) {
-                numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
-
-                if (numReadBytes > 0) {
-                    try {
+	    try
+	    {
+	       while (!isInterrupted()) {
+		  numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
+		  
+		  if (numReadBytes > 0) {
+		     try {
                         String decoded = Arrays.toString(audioBuffer);
-
+			
                         message = handler.obtainMessage();
+			messageBundle = new Bundle();
                         messageBundle.putString("data", decoded);
                         message.setData(messageBundle);
                         handler.sendMessage(message);
-                    }
-                    catch(Exception ex) {
+		     }
+		     catch(Exception ex) {
                         message = handler.obtainMessage();
+			messageBundle = new Bundle();
                         messageBundle.putString("error", ex.toString());
                         message.setData(messageBundle);
                         handler.sendMessage(message);
-                    }
-                }
-            }
+		     }
+		  }
+	       } // loop
 
-            if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-                recorder.stop();
-            }
+	       if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+		  recorder.stop();
+	       }
+	    }
+	    catch(Exception ex)
+	    {
+	       message = handler.obtainMessage();
+	       messageBundle = new Bundle();
+	       messageBundle.putString("error", ex.toString());
+	       message.setData(messageBundle);
+	       handler.sendMessage(message);
+	    }
 
             recorder.release();
             recorder = null;
         }
+       }
+       else
+       { // recording to fileUrl
+	  int numReadBytes = 0;
+	  byte audioBuffer[] = new byte[readBufferSize];
+	  synchronized(this) {
+	     recorder.startRecording();
+
+	     try
+	     {
+		File audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
+		FileOutputStream os = new FileOutputStream(audioFile.getPath());
+		
+		while (!isInterrupted()) {
+		   numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
+		  
+		   if (numReadBytes > 0) {
+		      try {
+			 os.write(audioBuffer, 0, numReadBytes);
+		      }
+		      catch(Exception ex) {
+			 message = handler.obtainMessage();
+			 messageBundle = new Bundle();
+			 messageBundle.putString("error", ex.toString());
+			 message.setData(messageBundle);
+			 handler.sendMessage(message);
+		      }
+		   }
+		} // loop
+		os.close();
+		File wav = new File(fileUrl);
+		addWavHeader(audioFile, wav);
+		message = handler.obtainMessage();
+		messageBundle = new Bundle();
+		messageBundle.putString("file", wav.toURI().toString());
+		message.setData(messageBundle);
+		handler.sendMessage(message);
+	       
+		if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+		   recorder.stop();
+		}
+	     }
+	     catch(Throwable ex)
+	     {
+		message = handler.obtainMessage();
+		messageBundle = new Bundle();
+		messageBundle.putString("error", ex.toString());
+		message.setData(messageBundle);
+		handler.sendMessage(message);
+	     }
+	     
+	     recorder.release();
+	     recorder = null;
+	  }
+       } // recording to fileUrl
     }
+
+   private File addWavHeader(File fPCM, File wav) {
+      try {
+	 long mySubChunk1Size = 16;
+	 int myBitsPerSample= audioFormat==AudioFormat.ENCODING_PCM_8BIT?8:16;
+	 int myFormat = 1;
+	 long myChannels = channelConfig==AudioFormat.CHANNEL_IN_STEREO?2:1;
+	 long mySampleRate = sampleRateInHz;
+	 long myByteRate = mySampleRate * myChannels * myBitsPerSample/8;
+	 int myBlockAlign = (int) (myChannels * myBitsPerSample/8);
+	 
+	 long myDataSize = fPCM.length();
+	 long myChunk2Size =  myDataSize * myChannels * myBitsPerSample/8;
+	 long myChunkSize = 36 + myChunk2Size;
+	 
+	 OutputStream os = new FileOutputStream(wav);
+	 BufferedOutputStream bos = new BufferedOutputStream(os);
+	 DataOutputStream outFile = new DataOutputStream(bos);
+	 
+	 outFile.writeBytes("RIFF");                                 // 00 - RIFF
+	 outFile.write(intToByteArray((int)myChunkSize), 0, 4);      // 04 - how big is the rest of this file?
+	 outFile.writeBytes("WAVE");                                 // 08 - WAVE
+	 outFile.writeBytes("fmt ");                                 // 12 - fmt 
+	 outFile.write(intToByteArray((int)mySubChunk1Size), 0, 4);  // 16 - size of this chunk
+	 outFile.write(shortToByteArray((short)myFormat), 0, 2);     // 20 - what is the audio format? 1 for PCM = Pulse Code Modulation
+	 outFile.write(shortToByteArray((short)myChannels), 0, 2);   // 22 - mono or stereo? 1 or 2?  (or 5 or ???)
+	 outFile.write(intToByteArray((int)mySampleRate), 0, 4);     // 24 - samples per second (numbers per second)
+	 outFile.write(intToByteArray((int)myByteRate), 0, 4);       // 28 - bytes per second
+	 outFile.write(shortToByteArray((short)myBlockAlign), 0, 2); // 32 - # of bytes in one sample, for all channels
+	 outFile.write(shortToByteArray((short)myBitsPerSample), 0, 2);  // 34 - how many bits in a sample(number)?  usually 16 or 24
+	 outFile.writeBytes("data");                                 // 36 - data
+	 outFile.write(intToByteArray((int)myDataSize), 0, 4);       // 40 - how big is this data chunk
+	 //outFile.write(clipData);                                    // 44 - the actual data itself - just a long string of numbers
+	 FileInputStream pcmIn = new FileInputStream(fPCM);
+	 byte buffer[] = new byte[1024];
+	 int iBytesRead = pcmIn.read(buffer);
+	 while (iBytesRead > 0)
+	 {
+	    outFile.write(buffer, 0, iBytesRead);
+	    iBytesRead = pcmIn.read(buffer);
+	 } // next chunk
+	 pcmIn.close();
+	 
+	 outFile.flush();
+	 outFile.close();
+	 
+      } catch (IOException e) {
+	 e.printStackTrace();
+      }
+      fPCM.delete();
+      return wav;
+   }
+
+   private static byte[] intToByteArray(int i)
+   {
+      byte[] b = new byte[4];
+      b[0] = (byte) (i & 0x00FF);
+      b[1] = (byte) ((i >> 8) & 0x000000FF);
+      b[2] = (byte) ((i >> 16) & 0x000000FF);
+      b[3] = (byte) ((i >> 24) & 0x000000FF);
+      return b;
+   }
+   
+   // convert a short to a byte array
+   public static byte[] shortToByteArray(short data)
+   {
+      /*
+       * NB have also tried:
+       * return new byte[]{(byte)(data & 0xff),(byte)((data >> 8) & 0xff)};
+       * 
+       */
+      
+      return new byte[]{(byte)(data & 0xff),(byte)((data >>> 8) & 0xff)};
+   }
 }

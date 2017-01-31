@@ -9,6 +9,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 
 import android.os.Handler;
 import android.os.Message;
@@ -28,12 +32,14 @@ public class AudioInputCapture extends CordovaPlugin
     public static String[]  permissions = { Manifest.permission.RECORD_AUDIO };
     public static int       RECORD_AUDIO = 0;
     public static final int PERMISSION_DENIED_ERROR = 20;
+    public static final int INVALID_URL_ERROR = 30;
 
     private int sampleRate = 44100;
     private int bufferSize = 4096;
     private int channels = 1;
     private String format = null;
     private int audioSource = 0;
+    private URI fileUrl = null;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -51,9 +57,29 @@ public class AudioInputCapture extends CordovaPlugin
                 this.channels = args.getInt(2);
                 this.format = args.getString(3);
                 this.audioSource = args.getInt(4);
+		String fileUrlString = args.getString(5);
+		if (fileUrlString != null) {
+		   this.fileUrl = new URI(fileUrlString);
+		   // ensure it's a file URL
+		   new File(this.fileUrl);
+		}
 
                 promptForRecord();
             }
+	    catch (URISyntaxException e) { // not a valid URL
+                receiver.interrupt();
+
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
+                INVALID_URL_ERROR));
+                return false;
+	    }
+	    catch (IllegalArgumentException e) { // not a file URL
+                receiver.interrupt();
+
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
+                INVALID_URL_ERROR));
+                return false;
+	    }
             catch (Exception e) {
                 receiver.interrupt();
 
@@ -69,9 +95,13 @@ public class AudioInputCapture extends CordovaPlugin
             return true;
         }
         else if (action.equals("stop")) {
-            receiver.interrupt();
-            this.sendUpdate(new JSONObject(), false); // release status callback in JS side
-            this.callbackContext = null;
+	    receiver.interrupt();
+	    // only do this if we're not saving to a file,
+	    // otherwise we won't get the event about the file being complete
+	    if (fileUrl == null) {
+	       this.sendUpdate(new JSONObject(), false); // release status callback in JS side
+	       this.callbackContext = null;
+	    }
             callbackContext.success();
             return true;
         }
@@ -120,6 +150,21 @@ public class AudioInputCapture extends CordovaPlugin
                 catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage(), e);
                 }
+                try {
+                    info.put("error", msg.getData().getString("error"));
+                }
+                catch (JSONException e) {
+                    Log.e(LOG_TAG, e.getMessage(), e);
+                }
+                try {
+                    info.put("file", msg.getData().getString("file"));
+		    activity.sendUpdate(info, false); // release status callback in JS side
+		    activity.callbackContext = null;
+		    return;
+                }
+                catch (JSONException e) {
+                    Log.e(LOG_TAG, e.getMessage(), e);
+                }
                 activity.sendUpdate(info, true);
             }
         }
@@ -137,7 +182,7 @@ public class AudioInputCapture extends CordovaPlugin
      */
     private void promptForRecord() {
         if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
-            receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource);
+	   receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource, this.fileUrl);
             receiver.setHandler(handler);
             receiver.start();
         }

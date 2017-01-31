@@ -85,6 +85,7 @@ audioinput.start = function (cfg) {
         audioinput._cfg.audioContext = cfg.audioContext || null;
         audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
         audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
+        audioinput._cfg.fileUrl = cfg.fileUrl || null;
 
         if (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2) {
             throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
@@ -108,7 +109,8 @@ audioinput.start = function (cfg) {
              audioinput._cfg.bufferSize,
              audioinput._cfg.channels,
              audioinput._cfg.format,
-             audioinput._cfg.audioSourceType]);
+             audioinput._cfg.audioSourceType,
+             audioinput._cfg.fileUrl]);
 
         audioinput._capturing = true;
 
@@ -224,6 +226,9 @@ audioinput._audioInputEvent = function (audioInputData) {
         }
         else if (audioInputData && audioInputData.error) {
             audioinput._audioInputErrorEvent(audioInputData.error);
+	}
+        else if (audioInputData && audioInputData.file) {
+            audioinput._audioInputFinishedEvent(audioInputData.file);
         }
     }
     catch (ex) {
@@ -238,6 +243,15 @@ audioinput._audioInputEvent = function (audioInputData) {
 
 audioinput._audioInputErrorEvent = function (e) {
     cordova.fireWindowEvent("audioinputerror", {message: e});
+};
+
+/**
+ * Finished callback for AudioInputCapture start
+ * @private
+ */
+
+audioinput._audioInputFinishedEvent = function (fileUrl) {
+    cordova.fireWindowEvent("audioinputfinished", {file: fileUrl});
 };
 
 /**
