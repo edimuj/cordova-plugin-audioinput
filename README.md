@@ -197,6 +197,9 @@ audioinput.getAudioContext();
 ## Related projects
 * The [speechcapture](https://github.com/edimuj/speechcapture) javascript library can be used together with this plugin to detect speech events, as well as capturing the audio: [speechcapture on github](https://github.com/edimuj/speechcapture).
 
+## Todo list
+[Enhancements](https://github.com/edimuj/cordova-plugin-audioinput/labels/enhancement)
+
 ## Motivate us!
 Do you use this plugin in an published app? Feel free to star the project and/or message me about it. It is always super-exciting to see real-world applications using this plugin, and it helps us to prioritize new features and bug fixes.
 
@@ -213,14 +216,10 @@ This project is open-source, so contributions are welcome. Just ensure that your
 4. Push to the branch (git push origin my-new-feature).
 5. Create a new Pull Request.
 
-## Todo list
-[Enhancements](https://github.com/edimuj/cordova-plugin-audioinput/labels/enhancement)
-
 ## Credits
 * The plugin is created by Edin Mujkanovic.
 
-* [zyf0330](https://github.com/zyf0330) 
-* [Tattomoosa](https://github.com/Tattomoosa)
+[Other contributors](https://github.com/edimuj/cordova-plugin-audioinput/graphs/contributors)
 
 ## License
 [MIT License](https://github.com/edimuj/cordova-plugin-audioinput/blob/master/LICENSE)
