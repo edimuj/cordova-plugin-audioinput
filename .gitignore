@@ -7,3 +7,5 @@
 !/package.json
 !/.gitignore
 !/plugin.xml
+
+src/.DS_Store
