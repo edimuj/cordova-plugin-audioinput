@@ -65,7 +65,7 @@ void HandleInputBuffer(void* inUserData,
 
         NSError *setCategoryError = nil;
         if (![avSession setCategory:AVAudioSessionCategoryPlayAndRecord
-         withOptions:AVAudioSessionCategoryOptionMixWithOthers
+         withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker
          error:&setCategoryError]) {
             // handle error?
         }
