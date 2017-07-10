@@ -68,7 +68,7 @@
 
         if (self.callbackId) {
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:0.0f];
-            [result setKeepCallbackAsBool:NO];
+            [result setKeepCallbackAsBool:YES]; /* TODO NO]; */
             [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
         }
 

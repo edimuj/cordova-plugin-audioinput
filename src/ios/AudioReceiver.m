@@ -100,7 +100,6 @@ void HandleInputBuffer(void* inUserData,
 
 	// assign fileUrl
 	_fileUrl = url;
-        _filePath = _fileUrl.path;
     }
 
     return self;
@@ -144,7 +143,8 @@ void HandleInputBuffer(void* inUserData,
     [self hasError:status:__FILE__:__LINE__];
     */
     
-    NSURL *soundFileURL = [NSURL URLWithString:[_myFileUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSURL *soundFileURL = [NSURL URLWithString:[_fileUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    _filePath = soundFileURL.path;
 
     if (_audioRecorder != nil)
     {
@@ -152,8 +152,18 @@ void HandleInputBuffer(void* inUserData,
       {
 	[_audioRecorder stop];
       }
-      [_audioRecorder dealloc];
+      /* [_audioRecorder dealloc]; TODO */
     }
+    
+    NSDictionary *recordingSettings = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
+                                        AVNumberOfChannelsKey : @(_recordState.mDataFormat.mChannelsPerFrame),
+                                        AVSampleRateKey : @(_recordState.mDataFormat.mSampleRate),
+                                        AVLinearPCMBitDepthKey : @(16),
+                                        AVLinearPCMIsBigEndianKey : @NO,
+                                        //AVLinearPCMIsNonInterleaved : @YES,
+                                        AVLinearPCMIsFloatKey : @NO,
+                                        AVEncoderAudioQualityKey : @(AVAudioQualityMax)
+                                        };
     
     NSError *error = nil;
     
@@ -191,7 +201,7 @@ void HandleInputBuffer(void* inUserData,
 	[_audioRecorder stop];
         _recordState.mIsRunning = false;
 
-	[self didFinish:url];
+	[self didFinish:_fileUrl];
 
     }
 }
@@ -238,7 +248,7 @@ void HandleInputBuffer(void* inUserData,
     Finished
  */
 - (void)didFinish:(NSString*)file {
-    [self.delegate didfinish:file];
+    [self.delegate didFinish:file];
 }
 
 
