@@ -14,6 +14,7 @@
 - (void)startRecording:(CDVInvokedUrlCommand*)command;
 - (void)didReceiveAudioData:(short*)data dataLength:(int)length;
 - (void)didEncounterError:(NSString*)msg;
+- (void)didFinish:(NSString*)url;
 
 @end
 
@@ -50,8 +51,9 @@
     short channels = [[command.arguments objectAtIndex:2] intValue];
     NSString* format = [command.arguments objectAtIndex:3];
     int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
+    NSString* fileUrl = [command.arguments objectAtIndex:5];
 
-    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType];
+    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType fileUrl:fileUrl];
 
     self.audioReceiver.delegate = self;
 
@@ -121,6 +123,28 @@
             if (self.callbackId) {
                 NSDictionary* errorData = [NSDictionary dictionaryWithObject:[NSString stringWithString:msg] forKey:@"error"];
                 CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:errorData];
+                [result setKeepCallbackAsBool:YES];
+                [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+            }
+        }
+        @catch (NSException *exception) {
+            if (self.callbackId) {
+                            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                            messageAsString:@"Exception in didEncounterError"];
+                            [result setKeepCallbackAsBool:YES];
+                            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+                        }
+        }
+    }];
+}
+
+- (void)didFinish:(NSString*)url
+{
+    [self.commandDelegate runInBackground:^{
+        @try {
+            if (self.callbackId) {
+                NSDictionary* messageData = [NSDictionary dictionaryWithObject:[NSString stringWithString:url] forKey:@"file"];
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:messageData];
                 [result setKeepCallbackAsBool:YES];
                 [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
             }

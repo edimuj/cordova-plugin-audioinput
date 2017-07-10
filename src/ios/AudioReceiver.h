@@ -31,6 +31,9 @@ typedef struct {
     @property (nonatomic, assign) id delegate;
 
     @property (nonatomic, assign) AQRecordState recordState;
+    @property (nonatomic, strong) AVAudioRecorder *audioRecorder;
+    @property (nonatomic, strong) NSString* fileUrl;
+    @property (nonatomic, strong) NSString* filePath;
 
     @property (nonatomic) int mySampleRate;
     @property (nonatomic) int myBufferSize;
@@ -42,7 +45,7 @@ typedef struct {
 - (void)stop;
 - (void)pause;
 - (void)dealloc;
-- (AudioReceiver*)init:(int)sampleRate bufferSize:(int)bufferSizeInBytes noOfChannels:(short)channels audioFormat:(NSString*)format sourceType:(int)audioSourceType;
+- (AudioReceiver*)init:(int)sampleRate bufferSize:(int)bufferSizeInBytes noOfChannels:(short)channels audioFormat:(NSString*)format sourceType:(int)audioSourceType fileUrl:(NSString*)url;
 - (void)didReceiveAudioData:(short*)samples dataLength:(int)length;
 - (void)hasError:(int)statusCode:(char*)file:(int)line;
 
