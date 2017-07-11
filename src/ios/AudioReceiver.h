@@ -32,7 +32,7 @@ typedef struct {
 
     @property (nonatomic, assign) AQRecordState recordState;
     @property (nonatomic, strong) AVAudioRecorder *audioRecorder;
-    @property (nonatomic, strong) NSString* fileUrl;
+    @property (nonatomic, strong) NSURL* fileUrl;
     @property (nonatomic, strong) NSString* filePath;
 
     @property (nonatomic) int mySampleRate;

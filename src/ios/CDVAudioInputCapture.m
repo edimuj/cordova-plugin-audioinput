@@ -7,6 +7,7 @@
 }
 
 @property (strong, nonatomic) AudioReceiver* audioReceiver;
+@property (strong, nonatomic) NSString* fileUrl;
 @property (strong) NSString* callbackId;
 
 - (void)start:(CDVInvokedUrlCommand*)command;
@@ -51,9 +52,15 @@
     short channels = [[command.arguments objectAtIndex:2] intValue];
     NSString* format = [command.arguments objectAtIndex:3];
     int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
-    NSString* fileUrl = [command.arguments objectAtIndex:5];
+    _fileUrl = [command.arguments objectAtIndex:5];
 
-    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType fileUrl:fileUrl];
+    if (self.audioReceiver != nil) {
+        [self.audioReceiver stop];
+        /* TODO [self.audioReceiver dealloc]; */
+	self.audioReceiver = nil;
+    }
+
+    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType fileUrl:_fileUrl];
 
     self.audioReceiver.delegate = self;
 
@@ -68,11 +75,14 @@
 
         if (self.callbackId) {
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:0.0f];
-            [result setKeepCallbackAsBool:YES]; /* TODO NO]; */
+	    /* if we are recording directly to file, we want to keep the callback */
+            [result setKeepCallbackAsBool:(_fileUrl == nil?NO:YES)];
             [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
         }
 
-        self.callbackId = nil;
+	if (_fileUrl == nil) {
+	  self.callbackId = nil;
+	}
     }];
 }
 
@@ -145,8 +155,10 @@
             if (self.callbackId) {
                 NSDictionary* messageData = [NSDictionary dictionaryWithObject:[NSString stringWithString:url] forKey:@"file"];
                 CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:messageData];
-                [result setKeepCallbackAsBool:YES];
+                [result setKeepCallbackAsBool:NO];
                 [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+
+		self.callbackId = nil;
             }
         }
         @catch (NSException *exception) {

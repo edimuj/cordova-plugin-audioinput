@@ -98,8 +98,18 @@ void HandleInputBuffer(void* inUserData,
         _recordState.mDataFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
         _recordState.bufferByteSize = (UInt32) MIN(bufferSizeInBytes, maxBufferSize);
 
-	// assign fileUrl
-	_fileUrl = url;
+        if (url == nil) {
+            _fileUrl = nil;
+        } else {
+            // assign fileUrl
+            _fileUrl = [NSURL URLWithString:[url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+            if (_fileUrl.isFileURL) {
+                _filePath = _fileUrl.path;
+                NSLog(@"[INFO] iosaudiorecorder:temp file path: %@", _filePath);
+            }
+        
+        }
+        
     }
 
     return self;
@@ -117,45 +127,43 @@ void HandleInputBuffer(void* inUserData,
 - (void) startRecording{
     OSStatus status = noErr;
 
-    /*
-    _recordState.mCurrentPacket = 0;
-    _recordState.mSelf = self;
-
-    status = AudioQueueNewInput(&_recordState.mDataFormat,
-                                HandleInputBuffer,
-                                &_recordState,
-                                CFRunLoopGetCurrent(),
-                                kCFRunLoopCommonModes,
-                                0,
-                                &_recordState.mQueue);
-    [self hasError:status:__FILE__:__LINE__];
-
-    for (int i = 0; i < kNumberBuffers; i++) {
+    if (_fileUrl == nil) {
+      _recordState.mCurrentPacket = 0;
+      _recordState.mSelf = self;
+      
+      status = AudioQueueNewInput(&_recordState.mDataFormat,
+				  HandleInputBuffer,
+				  &_recordState,
+				  CFRunLoopGetCurrent(),
+				  kCFRunLoopCommonModes,
+				  0,
+				  &_recordState.mQueue);
+      [self hasError:status:__FILE__:__LINE__];
+      
+      for (int i = 0; i < kNumberBuffers; i++) {
         status = AudioQueueAllocateBuffer(_recordState.mQueue, _recordState.bufferByteSize, &_recordState.mBuffers[i]);
         [self hasError:status:__FILE__:__LINE__];
-
+	
         status = AudioQueueEnqueueBuffer(_recordState.mQueue, _recordState.mBuffers[i], 0, NULL);
         [self hasError:status:__FILE__:__LINE__];
-    }
-
-    _recordState.mIsRunning = YES;
-    status = AudioQueueStart(_recordState.mQueue, NULL);
-    [self hasError:status:__FILE__:__LINE__];
-    */
-    
-    NSURL *soundFileURL = [NSURL URLWithString:[_fileUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    _filePath = soundFileURL.path;
-
-    if (_audioRecorder != nil)
-    {
-      if (_audioRecorder.recording)
-      {
-	[_audioRecorder stop];
       }
-      /* [_audioRecorder dealloc]; TODO */
-    }
+
+      _recordState.mIsRunning = YES;
+      status = AudioQueueStart(_recordState.mQueue, NULL);
+      [self hasError:status:__FILE__:__LINE__];
+
+    } else { /* recording direct to file */
     
-    NSDictionary *recordingSettings = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
+      if (_audioRecorder != nil)
+      {
+	if (_audioRecorder.recording)
+	{
+	  [_audioRecorder stop];
+	}
+	/* [_audioRecorder dealloc]; TODO */
+      }
+      
+      NSDictionary *recordingSettings = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
                                         AVNumberOfChannelsKey : @(_recordState.mDataFormat.mChannelsPerFrame),
                                         AVSampleRateKey : @(_recordState.mDataFormat.mSampleRate),
                                         AVLinearPCMBitDepthKey : @(16),
@@ -165,28 +173,35 @@ void HandleInputBuffer(void* inUserData,
                                         AVEncoderAudioQualityKey : @(AVAudioQualityMax)
                                         };
     
-    NSError *error = nil;
-    
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-    [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                        error:nil];
-    
-    _audioRecorder = [[AVAudioRecorder alloc]
-                      initWithURL:soundFileURL
-                      settings:recordingSettings
-                      error:&error];
-    
-    if (error)
-    {
-      NSLog(@"[INFO] iosaudiorecorder: error: %@", [error localizedDescription]);
-    } 
-    else 
-    {
-      [_audioRecorder prepareToRecord];
-      [_audioRecorder record];
-      _recordState.mIsRunning = YES;
-      NSLog(@"[INFO] iosaudiorecorder:Recording...");
-    }
+      NSError *error = nil;
+        
+      if (_filePath == nil) {
+	/* URL was not a valid file URL */
+	NSString *msg = [NSString stringWithFormat:@"Invalid file URL: %@", _fileUrl];
+	[self.delegate didEncounterError:msg];
+      } else {
+	
+	AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+	[audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
+			    error:nil];
+	
+	_audioRecorder = [[AVAudioRecorder alloc]
+                              initWithURL:_fileUrl
+				 settings:recordingSettings
+				    error:&error];
+	
+	if (error) {
+	  NSLog(@"[INFO] iosaudiorecorder: error: %@", [error localizedDescription]);
+	  NSString *msg = [NSString stringWithFormat:@"AVAudioRecorder error: %@", [error localizedDescription]];
+	  [self.delegate didEncounterError:msg];
+	} else {
+	  [_audioRecorder prepareToRecord];
+	  [_audioRecorder record];
+	  _recordState.mIsRunning = YES;
+	  NSLog(@"[INFO] iosaudiorecorder:Recording...");
+	}
+      }
+    } /* recording direct to file */
 }
 
 /**
@@ -195,14 +210,13 @@ void HandleInputBuffer(void* inUserData,
 - (void)stop {
 
     if (_recordState.mIsRunning) {
-/*
+      if (_fileUrl == nil) {
         AudioQueueStop(_recordState.mQueue, true);
-*/
+      } else {
 	[_audioRecorder stop];
-        _recordState.mIsRunning = false;
-
-	[self didFinish:_fileUrl];
-
+	[self didFinish:_fileUrl.absoluteString];
+      }
+      _recordState.mIsRunning = false;      
     }
 }
 
@@ -219,9 +233,9 @@ void HandleInputBuffer(void* inUserData,
     Deallocate audio queue
  */
 - (void)dealloc {
-/*
+  if (_fileUrl == nil) {
     AudioQueueDispose(_recordState.mQueue, true);
-*/
+  }
 }
 
 
@@ -240,7 +254,9 @@ void HandleInputBuffer(void* inUserData,
 {
     if (statusCode) {
         NSLog(@"Error Code responded %d in file %s on line %d\n", statusCode, file, line);
-        exit(-1);
+	NSString *msg = [NSString stringWithFormat:@"AudioReceiver error [%d]", statusCode];
+        /* exit(-1); */
+	[self.delegate didEncounterError:msg];
     }
 }
 
