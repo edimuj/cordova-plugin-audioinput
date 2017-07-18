@@ -141,6 +141,7 @@ public class AudioInputReceiver extends Thread {
 	  int numReadBytes = 0;
 	  byte audioBuffer[] = new byte[readBufferSize];
 	  synchronized(this) {
+	     URI finalUrl = fileUrl; // even if the member changes, we use what we were originally given
 	     recorder.startRecording();
 
 	     try
@@ -165,7 +166,7 @@ public class AudioInputReceiver extends Thread {
 		   }
 		} // loop
 		os.close();
-		File wav = new File(fileUrl);
+		File wav = new File(finalUrl);
 		addWavHeader(audioFile, wav);
 		audioFile.delete();
 		message = handler.obtainMessage();
@@ -189,7 +190,7 @@ public class AudioInputReceiver extends Thread {
 	     
 	     recorder.release();
 	     recorder = null;
-	  }
+	  } // syncrhonized
        } // recording to fileUrl
     }
 
