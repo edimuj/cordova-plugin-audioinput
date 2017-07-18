@@ -33,6 +33,7 @@ public class AudioInputCapture extends CordovaPlugin
     public static int       RECORD_AUDIO = 0;
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int INVALID_URL_ERROR = 30;
+    public static final int INVALID_STATE_ERROR = 40;
 
     private int sampleRate = 44100;
     private int bufferSize = 4096;
@@ -67,21 +68,21 @@ public class AudioInputCapture extends CordovaPlugin
                 promptForRecord();
             }
 	    catch (URISyntaxException e) { // not a valid URL
-                receiver.interrupt();
+                if (receiver != null) receiver.interrupt();
 
                 this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
                 INVALID_URL_ERROR));
                 return false;
 	    }
 	    catch (IllegalArgumentException e) { // not a file URL
-                receiver.interrupt();
+                if (receiver != null) receiver.interrupt();
 
                 this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
                 INVALID_URL_ERROR));
                 return false;
 	    }
             catch (Exception e) {
-                receiver.interrupt();
+                if (receiver != null) receiver.interrupt();
 
                 this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
                 PERMISSION_DENIED_ERROR));
@@ -95,28 +96,37 @@ public class AudioInputCapture extends CordovaPlugin
             return true;
         }
         else if (action.equals("stop")) {
-	    receiver.interrupt();
-	    // only do this if we're not saving to a file,
-	    // otherwise we won't get the event about the file being complete
-	    if (fileUrl == null) {
-	       this.sendUpdate(new JSONObject(), false); // release status callback in JS side
-	       this.callbackContext = null;
+	    if (receiver != null)
+	    {
+	       receiver.interrupt();
+	       // only do this if we're not saving to a file,
+	       // otherwise we won't get the event about the file being complete
+	       if (fileUrl == null) {
+		  this.sendUpdate(new JSONObject(), false); // release status callback in JS side
+		  this.callbackContext = null;
+	       }
+	       callbackContext.success();
+	       return true;
 	    }
-            callbackContext.success();
-            return true;
+	    else
+	    { // not recording, so can't stop
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
+                INVALID_STATE_ERROR));
+                return false;
+	    }
         }
 
         return false;
     }
 
     public void onDestroy() {
-        if (!receiver.isInterrupted()) {
+        if (receiver != null && !receiver.isInterrupted()) {
             receiver.interrupt();
         }
     }
 
     public void onReset() {
-        if (!receiver.isInterrupted()) {
+        if (receiver != null && !receiver.isInterrupted()) {
             receiver.interrupt();
         }
     }
@@ -181,6 +191,9 @@ public class AudioInputCapture extends CordovaPlugin
      * Ensure that we have gotten record audio permission
      */
     private void promptForRecord() {
+        // if we've already got a receiver, stop it
+        if (receiver != null) receiver.interrupt();
+	
         if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
 	   receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource, this.fileUrl);
             receiver.setHandler(handler);
