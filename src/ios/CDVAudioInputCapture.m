@@ -192,13 +192,17 @@
 
 - (void)didEnterBackground
 {
-    [self.audioReceiver pause];
+  // only pause recording when we go into the background if we're not recording to a file
+  // (otherwis it generates a spurious finished event, and starting again when in the foreground resets the file)
+  if (_fileUrl == nil) [self.audioReceiver pause];
 }
 
 
 - (void)willEnterForeground
 {
-    [self.audioReceiver start];
+  // only start recording when we go into the foreground if we're not recording to a file
+  // (otherwise starting again resets the file)
+  if (_fileUrl == nil) [self.audioReceiver start];
 }
 
 @end
