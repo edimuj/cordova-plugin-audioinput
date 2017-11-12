@@ -26,6 +26,7 @@ public class AudioInputCapture extends CordovaPlugin
     private static final String LOG_TAG = "AudioInputCapture";
 
     private CallbackContext callbackContext = null;
+    private CallbackContext getPermissionCallbackContext = null;
     private AudioInputReceiver receiver;
     private final AudioInputCaptureHandler handler = new AudioInputCaptureHandler(this);
 
@@ -35,23 +36,99 @@ public class AudioInputCapture extends CordovaPlugin
     public static final int INVALID_URL_ERROR = 30;
     public static final int INVALID_STATE_ERROR = 40;
 
+    private boolean initialized = false;
     private int sampleRate = 44100;
     private int bufferSize = 4096;
     private int channels = 1;
     private String format = null;
     private int audioSource = 0;
     private URI fileUrl = null;
-
+   
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("start")) {
-            if (this.callbackContext != null) {
-                callbackContext.error( "AudioInputCapture listener already running.");
-                return true;
-            }
+        if (action.equals("initialize")
+	    // allow "start" to be called without "initialize", to keep backward compatibility
+	    || (action.equals("start") && !initialized)) {
 
             this.callbackContext = callbackContext;
+	    
+            try {
+	       this.sampleRate = args.getInt(0);
+	       this.bufferSize = args.getInt(1);
+	       this.channels = args.getInt(2);
+	       this.format = args.getString(3);
+	       this.audioSource = args.getInt(4);
+	       String fileUrlString = args.getString(5);
+	       if (fileUrlString != null) {
+		  this.fileUrl = new URI(fileUrlString);
+		  // ensure it's a file URL
+		  new File(this.fileUrl);
+	       }
+            }
+	    catch (URISyntaxException e) { // not a valid URL
+	       if (receiver != null) receiver.interrupt();
+	       
+	       this.callbackContext.sendPluginResult(
+		  new PluginResult(PluginResult.Status.ERROR, INVALID_URL_ERROR));
+	       return false;
+	    }
+	    catch (IllegalArgumentException e) { // not a file URL
+	       if (receiver != null) receiver.interrupt();
+	       
+	       this.callbackContext.sendPluginResult(
+		  new PluginResult(PluginResult.Status.ERROR, INVALID_URL_ERROR));
+	       return false;
+	    }
+            catch (Exception e) {
+                if (receiver != null) receiver.interrupt();
 
+                this.callbackContext.sendPluginResult(
+		   new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+                return false;
+            }
+
+	    if (action.equals("initialize")) {
+	       // Invoke callback
+	       PluginResult result = new PluginResult(PluginResult.Status.OK);
+	       callbackContext.sendPluginResult(result);
+	       return true;
+	    }
+        } // allow fall-through through to "start"...
+
+	if (action.equals("checkMicrophonePermission")) {
+	   if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
+	      PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.TRUE);
+	      callbackContext.sendPluginResult(result);
+	   } 
+	   else {
+	      PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.FALSE);
+	      callbackContext.sendPluginResult(result);
+	   }
+	   return true;
+        }
+	
+	if (action.equals("getMicrophonePermission")) {
+	   if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
+	      PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.TRUE);
+	      callbackContext.sendPluginResult(result);
+	   } 
+	   else {
+	      // save context for when we know whether they've given permission
+	      getPermissionCallbackContext = callbackContext;
+
+	      // return nothing in particular for now...
+	      PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
+	      pluginResult.setKeepCallback(true);
+	      callbackContext.sendPluginResult(pluginResult);
+
+	      // ask for permission
+	      getMicPermission(RECORD_AUDIO);
+
+	   }
+	   return true;
+        }
+
+        if (action.equals("start")) {
             try {
                 this.sampleRate = args.getInt(0);
                 this.bufferSize = args.getInt(1);
@@ -95,7 +172,8 @@ public class AudioInputCapture extends CordovaPlugin
             callbackContext.sendPluginResult(pluginResult);
             return true;
         }
-        else if (action.equals("stop")) {
+
+	if (action.equals("stop")) {
 	    if (receiver != null)
 	    {
 	       receiver.interrupt();
@@ -209,15 +287,29 @@ public class AudioInputCapture extends CordovaPlugin
      */
     public void onRequestPermissionResult(int requestCode, String[] permissions,
                                               int[] grantResults) throws JSONException {
-
+       
         for(int r:grantResults) {
             if(r == PackageManager.PERMISSION_DENIED) {
-                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
-                PERMISSION_DENIED_ERROR));
-                return;
+	       if (this.getPermissionCallbackContext == null) {
+		  // called directly from "start"
+		  this.callbackContext.sendPluginResult(
+		     new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+		  return;
+	       }
+	       else { // called from "getMicrophonePermission"
+		  PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.FALSE);
+		  this.getPermissionCallbackContext.sendPluginResult(result);
+	       }
             }
         }
 
-        promptForRecord();
+	if (this.getPermissionCallbackContext == null) {
+	   // called directly from "start"
+	   promptForRecord();
+	}
+	else { // called from "getMicrophonePermission"
+	   PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.TRUE);
+	   this.getPermissionCallbackContext.sendPluginResult(result);
+	}
     }
 }
