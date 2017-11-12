@@ -52,6 +52,74 @@ audioinput.DEFAULT = {
 };
 
 /**
+ * Does any initialization that might be required.
+ *
+ * @param {Callback} onComplete
+ */
+audioinput.initialize = function (cfg, onComplete) {
+    console.log("audioinput.initialize");
+    if (!cfg) {
+        cfg = {};
+    }    
+    audioinput._cfg = {};
+    audioinput._cfg.sampleRate = cfg.sampleRate || audioinput.DEFAULT.SAMPLERATE;
+    audioinput._cfg.bufferSize = cfg.bufferSize || audioinput.DEFAULT.BUFFER_SIZE;
+    audioinput._cfg.channels = cfg.channels || audioinput.DEFAULT.CHANNELS;
+    audioinput._cfg.format = cfg.format || audioinput.DEFAULT.FORMAT;
+    audioinput._cfg.normalize = typeof cfg.normalize == 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
+    audioinput._cfg.normalizationFactor = cfg.normalizationFactor || audioinput.DEFAULT.NORMALIZATION_FACTOR;
+    audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
+    audioinput._cfg.audioContext = cfg.audioContext || null;
+    audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
+    audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
+    audioinput._cfg.fileUrl = cfg.fileUrl || null;
+    
+    if (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2) {
+        throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
+            " supported.";
+    }
+    else if (audioinput._cfg.format != "PCM_16BIT" && audioinput._cfg.format != "PCM_8BIT") {
+        throw "Invalid format (" + audioinput._cfg.format + "). Only 'PCM_8BIT' and 'PCM_16BIT' is" +
+            " supported.";
+    }
+    
+    if (audioinput._cfg.bufferSize <= 0) {
+        throw "Invalid bufferSize (" + audioinput._cfg.bufferSize + "). Must be greater than zero.";
+    }
+    
+    if (audioinput._cfg.concatenateMaxChunks <= 0) {
+        throw "Invalid concatenateMaxChunks (" + audioinput._cfg.concatenateMaxChunks + "). Must be greater than zero.";
+    }
+    exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "initialize",
+	 [audioinput._cfg.sampleRate,
+          audioinput._cfg.bufferSize,
+          audioinput._cfg.channels,
+          audioinput._cfg.format,
+          audioinput._cfg.audioSourceType,
+          audioinput._cfg.fileUrl]);
+}
+
+/**
+ * Checks (silently) whether the user has already given permission to access the microphone.
+ *
+ * @param {Callback} onComplete
+ */
+audioinput.checkMicrophonePermission = function (onComplete) {
+    console.log("audioinput.checkMicrophonePermission");
+    exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "checkMicrophonePermission", []);
+}
+
+/**
+ * Asks the user for permission to access the microphone.
+ *
+ * @param {Callback} onComplete
+ */
+audioinput.getMicrophonePermission = function (onComplete) {
+    console.log("audioinput.getMicrophonePermission");
+    exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "getMicrophonePermission", []);
+}
+
+/**
  * Start capture of Audio input
  *
  * @param {Object} cfg
@@ -68,13 +136,14 @@ audioinput.DEFAULT = {
  *  audioSourceType (Use audioinput.AUDIOSOURCE_TYPE.)
  */
 audioinput.start = function (cfg) {
+    console.log("audioinput.start");
     if (!audioinput._capturing) {
 
         if (!cfg) {
             cfg = {};
         }
 
-        audioinput._cfg = {};
+        if (!audioinput._cfg) audioinput._cfg = {};
         audioinput._cfg.sampleRate = cfg.sampleRate || audioinput.DEFAULT.SAMPLERATE;
         audioinput._cfg.bufferSize = cfg.bufferSize || audioinput.DEFAULT.BUFFER_SIZE;
         audioinput._cfg.channels = cfg.channels || audioinput.DEFAULT.CHANNELS;
@@ -133,9 +202,10 @@ audioinput.start = function (cfg) {
 /**
  * Stop capturing audio
  */
-audioinput.stop = function () {
+audioinput.stop = function (onStopped) {
+    console.log("audioinput.stop");
     if (audioinput._capturing) {
-        exec(null, audioinput._audioInputErrorEvent, "AudioInputCapture", "stop", []);
+        exec(onStopped, audioinput._audioInputErrorEvent, "AudioInputCapture", "stop", []);
         audioinput._capturing = false;
     }
 
@@ -146,7 +216,6 @@ audioinput.stop = function () {
         audioinput._audioDataQueue = null;
     }
 };
-
 
 /**
  * Connect the audio node

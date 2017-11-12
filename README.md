@@ -13,6 +13,7 @@ The plugin supports two different methods for microphone capture:
 ## Supported Platforms
 * Android
 * iOS
+* browser
 
 ## Installation
 From the Cordova Plugin Repository:
@@ -104,8 +105,39 @@ Remember that unfiltered microphone output likely will create a nasty audio feed
 * file-demo - How to encode recorded data to WAV format and save the resulting blob as a file. To run this demo ```cordova plugin add cordova-plugin-file``` is required.
 
 ## API
+**Prepare for capturing audio** from the microphone.
+Performs any required preparation for recording audio on the given platform.
+```javascript
+audioinput.initialize( captureCfg, onInitialized );
+```
+
+**Check whether the module already has permission to access the microphone.
+The callback function has a single boolean argument, which is true if access to the microphone
+has been granted, and false otherwise. The check is passive - the user is not asked for permission
+if they haven't already granted it.
+```javascript
+audioinput.checkMicrophonePermission( onComplete );
+```
+
+**Obtains permission to access the microphone from the user.
+This function will prompt the user for access to the microphone if they haven't already
+granted it.
+The callback function has two arguments:
+ * hasPermission - true if access to the microphone has been granted, and false otherwise.
+ * message - optionally, a reason message, hasPermission is false
+```javascript
+audioinput.getMicrophonePermission( onComplete );
+```
+
 **Start capturing audio** from the microphone.
 If your app doesn't have recording permission on the users device, the plugin will ask for permission when start is called. And the new Android 6.0 runtime permissions are also supported.
+```javascript
+audioinput.initialize( captureCfg );
+```
+
+**Start capturing audio** from the microphone.
+Ensure that initialize and at least checkMicrophonePermission have been called before calling this.
+The captureCfg parameter can include more configuration than previously passed to initialize.
 ```javascript
 audioinput.start( captureCfg );
 ```
@@ -158,7 +190,18 @@ var captureCfg = {
     // -VOICE_COMMUNICATION - Tuned for voice communications such as VoIP.
     // -MIC - Microphone audio source. (Android only)
     // -VOICE_RECOGNITION - Tuned for voice recognition if available (Android only)
-    audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT
+    audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
+
+    // Optionally specifies a file://... URL to which the audio should be saved.
+    // If this is set, then no audioinput events will be raised during recording.
+    // When stop is called, a single audioinputfinished event will be raised, with
+    // a "file" argument that contains the URL to which the audio was written,
+    // and the callback passed into stop() will be invoked.
+    // Currently, only WAV format files are guaranteed to be supported on all platforms.
+    // When called initialize(), this should be a URL to the directory in which files will
+    // be saved when calling start(), so that initialize() can ensure access to the directory
+    // is available.
+    fileUrl: null
     
 };
 
