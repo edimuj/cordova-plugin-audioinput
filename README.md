@@ -130,12 +130,6 @@ audioinput.getMicrophonePermission( onComplete );
 ```
 
 **Start capturing audio** from the microphone.
-If your app doesn't have recording permission on the users device, the plugin will ask for permission when start is called. And the new Android 6.0 runtime permissions are also supported.
-```javascript
-audioinput.initialize( captureCfg );
-```
-
-**Start capturing audio** from the microphone.
 Ensure that initialize and at least checkMicrophonePermission have been called before calling this.
 The captureCfg parameter can include more configuration than previously passed to initialize.
 ```javascript
