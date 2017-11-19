@@ -39,21 +39,25 @@
     <!-- ios -->
     <platform name="ios">
 
-        <config-file parent="/*" target="config.xml">
-            <feature name="AudioInputCapture">
-                <param name="ios-package" value="CDVAudioInputCapture" />
-            </feature>
-        </config-file>
+      <config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
+        <string>This app needs microphone access</string>
+      </config-file>
 
-        <source-file src="src/ios/CDVAudioInputCapture.m" />
-        <source-file src="src/ios/AudioReceiver.h" />
-        <source-file src="src/ios/AudioReceiver.m" />
-
-        <framework src="Accelerate.framework" weak="true" />
-        <framework src="CoreAudio.framework" weak="true" />
-        <framework src="AudioToolbox.framework" weak="true" />
-        <framework src="AVFoundation.framework" weak="true" />
-
+      <config-file parent="/*" target="config.xml">
+        <feature name="AudioInputCapture">
+          <param name="ios-package" value="CDVAudioInputCapture" />
+        </feature>
+      </config-file>
+      
+      <source-file src="src/ios/CDVAudioInputCapture.m" />
+      <source-file src="src/ios/AudioReceiver.h" />
+      <source-file src="src/ios/AudioReceiver.m" />
+      
+      <framework src="Accelerate.framework" weak="true" />
+      <framework src="CoreAudio.framework" weak="true" />
+      <framework src="AudioToolbox.framework" weak="true" />
+      <framework src="AVFoundation.framework" weak="true" />
+      
     </platform>
 
     <!-- browser -->
