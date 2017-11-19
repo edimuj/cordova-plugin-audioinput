@@ -36,6 +36,37 @@
                    object:nil];
 }
 
+- (void)initialize:(CDVInvokedUrlCommand*)command
+{
+    _fileUrl = [command.arguments objectAtIndex:5];
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:nil];
+    [result setKeepCallbackAsBool:NO];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)checkMicrophonePermission:(CDVInvokedUrlCommand*)command
+{
+  BOOL hasPermission = FALSE;
+  if ([[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted) {
+    hasPermission = TRUE;
+  }
+  CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasPermission];
+  [result setKeepCallbackAsBool:NO];
+  [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)getMicrophonePermission:(CDVInvokedUrlCommand*)command
+{
+  [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+      NSLog(@"permission : %d", granted);
+      
+      CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:granted];
+      [result setKeepCallbackAsBool:NO];
+      [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }];
+}
+
+
 
 - (void)start:(CDVInvokedUrlCommand*)command
 {
