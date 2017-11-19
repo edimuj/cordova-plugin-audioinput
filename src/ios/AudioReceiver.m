@@ -125,7 +125,12 @@ void HandleInputBuffer(void* inUserData,
 
 
 - (void) startRecording{
+  NSLog(@"[INFO] startRecording: %d", _recordState.mIsRunning);
     OSStatus status = noErr;
+
+    if (_recordState.mIsRunning == YES) {
+      [self stop];
+    }
 
     if (_fileUrl == nil) {
       _recordState.mCurrentPacket = 0;
@@ -153,16 +158,7 @@ void HandleInputBuffer(void* inUserData,
       [self hasError:status:__FILE__:__LINE__];
 
     } else { /* recording direct to file */
-    
-      if (_audioRecorder != nil)
-      {
-	if (_audioRecorder.recording)
-	{
-	  [_audioRecorder stop];
-	}
-	/* [_audioRecorder dealloc]; TODO */
-      }
-      
+          
       NSDictionary *recordingSettings = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
                                         AVNumberOfChannelsKey : @(_recordState.mDataFormat.mChannelsPerFrame),
                                         AVSampleRateKey : @(_recordState.mDataFormat.mSampleRate),
@@ -201,6 +197,7 @@ void HandleInputBuffer(void* inUserData,
 	  NSLog(@"[INFO] iosaudiorecorder:Recording...");
 	}
       }
+      _startedFileUrl = _fileUrl;
     } /* recording direct to file */
 }
 
@@ -208,16 +205,18 @@ void HandleInputBuffer(void* inUserData,
     Stop Audio Input capture
  */
 - (void)stop {
-
+  NSLog(@"[INFO] stop: %d", _recordState.mIsRunning);
+	  
     if (_recordState.mIsRunning) {
+      _recordState.mIsRunning = false;      
       if (_fileUrl == nil) {
         AudioQueueStop(_recordState.mQueue, true);
       } else {
 	[_audioRecorder stop];
-	[self didFinish:_fileUrl.absoluteString];
+	[self didFinish:_startedFileUrl.absoluteString];
       }
-      _recordState.mIsRunning = false;      
     }
+  NSLog(@"[INFO] stopped: %d", _recordState.mIsRunning);
 }
 
 
