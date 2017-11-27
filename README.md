@@ -94,6 +94,81 @@ audioinput.stop()
 
 ```
 
+## Advanced Usage Example - saving to files
+Use fileUrl in captureCfg if you want to save audio files directly to the file system.
+
+This requires adding cordova-plugin-file to your project.
+
+```javascript
+
+// get access to the file system
+window.requestFileSystem(window.TEMPORARY, 5*1024*1024, function(fs) {
+    console.log("Got file system: " + fs.name);
+    fileSystem = fs;
+
+    // now you can initialis audio, telling it about the file system you want to use
+    var captureCfg = {
+	sampleRate: 16000,
+	bufferSize: 8192,
+	channels: 1,
+	format: audioinput.FORMAT.PCM_16BIT,
+	audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
+	fileUrl: cordova.file.cacheDirectory
+    };
+    window.audioinput.initialize(captureCfg, function() {
+	
+	// now check whether we already have permission to access the microphone
+	window.audioinput.checkMicrophonePermission(function(hasPermission) {
+	    if (hasPermission) {
+		console.log("already have permission to record");
+	    } else {
+		// ask the user for permission to access the microphone
+		window.audioinput.getMicrophonePermission(function(hasPermission, message) {
+		    if (hasPermission) {
+			console.log("granted permission to record");
+		    } else {
+			console.warn("Denied permission to record");
+		    }
+		}); // getMicrophonePermission
+	    }
+	}); // checkMicrophonePermission
+    }); // initialize
+}, function (e) {
+    console.log("Couldn't get file system: " + e.message)
+});
+
+
+// then later on, when we want to record to a file...
+
+var captureCfg = {
+    fileUrl : cordova.file.cacheDirectory + "temp.wav"
+}
+audioinput.start(captureCfg);
+
+// ... and when we're ready to stop recording
+audioinput.stop(function(url) {
+    // now you have the URL (which might be different to the one passed in to start())
+    // you might, for example, read the data into a blob
+    window.resolveLocalFileSystemURL(url, function (tempFile) {
+	tempFile.file(function (tempWav) {
+	    var reader = new FileReader();	    
+	    reader.onloadend = function(e) {
+		var blob = new Blob([new Uint8Array(this.result)], { type: "audio/wav" });
+		// delete the temporary file
+		tempFile.remove(function (e) { console.log("temporary WAV deleted"); }, fileError);
+		// do something with the blob:
+		doSomethingWithWAVData(blob);		
+	    }	    
+	    reader.readAsArrayBuffer(tempWav);
+	});
+    }, function(e) {
+	console.log("Could not resolveLocalFileSystemURL: " + e.message);
+    });
+});
+
+
+```
+
 ## Demos
 The `demo` folder contains some usage examples.
 
@@ -202,8 +277,11 @@ var captureCfg = {
 ```
 
 **Stop capturing audio** from the microphone:
+The callback function has a single string argument, which is the url where the file was saved,
+if a fileUrl was passed in to start as part of captureCfg.
+Note that the url passed out from stop is not guaranteed to be the same as the fileUrl passed in.
 ```javascript
-audioinput.stop();
+audioinput.stop( onStopped );
 ```
 
 **Check if the plugin is capturing**, i.e. if it is started or not:
