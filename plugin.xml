@@ -62,7 +62,6 @@
 
     <!-- browser -->
     <platform name="browser">
-      <dependency id="cordova-plugin-file" version="^4.3.4" />
       <config-file parent="/*" target="config.xml">
         <feature name="AudioInputCapture">
           <param name="browser-package" value="AudioInputCapture" />
@@ -71,7 +70,7 @@
       <js-module src="src/browser/AudioInputCaptureProxy.js" name="AudioInputCaptureProxy">
         <runs />
       </js-module>
-      <asset src="src/browser/RecorderWorker.js" target="RecorderWorker.js">
+      <asset src="src/browser/RecorderWorker.js" target=".">
         <runs />
       </asset>
     </platform>
