@@ -7,6 +7,7 @@
 }
 
 @property (strong, nonatomic) AudioReceiver* audioReceiver;
+@property (strong, nonatomic) NSString* fileUrl;
 @property (strong) NSString* callbackId;
 
 - (void)start:(CDVInvokedUrlCommand*)command;
@@ -14,6 +15,7 @@
 - (void)startRecording:(CDVInvokedUrlCommand*)command;
 - (void)didReceiveAudioData:(short*)data dataLength:(int)length;
 - (void)didEncounterError:(NSString*)msg;
+- (void)didFinish:(NSString*)url;
 
 @end
 
@@ -34,6 +36,37 @@
                    object:nil];
 }
 
+- (void)initialize:(CDVInvokedUrlCommand*)command
+{
+    _fileUrl = [command.arguments objectAtIndex:5];
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:nil];
+    [result setKeepCallbackAsBool:NO];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)checkMicrophonePermission:(CDVInvokedUrlCommand*)command
+{
+  BOOL hasPermission = FALSE;
+  if ([[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted) {
+    hasPermission = TRUE;
+  }
+  CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasPermission];
+  [result setKeepCallbackAsBool:NO];
+  [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)getMicrophonePermission:(CDVInvokedUrlCommand*)command
+{
+  [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+      NSLog(@"permission : %d", granted);
+      
+      CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:granted];
+      [result setKeepCallbackAsBool:NO];
+      [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }];
+}
+
+
 
 - (void)start:(CDVInvokedUrlCommand*)command
 {
@@ -50,8 +83,15 @@
     short channels = [[command.arguments objectAtIndex:2] intValue];
     NSString* format = [command.arguments objectAtIndex:3];
     int audioSourceType = [[command.arguments objectAtIndex:4] intValue];
+    _fileUrl = [command.arguments objectAtIndex:5];
 
-    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType];
+    if (self.audioReceiver != nil) {
+        [self.audioReceiver stop];
+        /* TODO [self.audioReceiver dealloc]; */
+	self.audioReceiver = nil;
+    }
+
+    self.audioReceiver = [[AudioReceiver alloc] init:sampleRate bufferSize:bufferSizeInBytes noOfChannels:channels audioFormat:format sourceType:audioSourceType fileUrl:_fileUrl];
 
     self.audioReceiver.delegate = self;
 
@@ -66,11 +106,14 @@
 
         if (self.callbackId) {
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDouble:0.0f];
-            [result setKeepCallbackAsBool:NO];
+	    /* if we are recording directly to file, we want to keep the callback */
+            [result setKeepCallbackAsBool:(_fileUrl == nil?NO:YES)];
             [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
         }
 
-        self.callbackId = nil;
+	if (_fileUrl == nil) {
+	  self.callbackId = nil;
+	}
     }];
 }
 
@@ -136,6 +179,30 @@
     }];
 }
 
+- (void)didFinish:(NSString*)url
+{
+    [self.commandDelegate runInBackground:^{
+        @try {
+            if (self.callbackId) {
+                NSDictionary* messageData = [NSDictionary dictionaryWithObject:[NSString stringWithString:url] forKey:@"file"];
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:messageData];
+                [result setKeepCallbackAsBool:NO];
+                [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+
+		self.callbackId = nil;
+            }
+        }
+        @catch (NSException *exception) {
+            if (self.callbackId) {
+                            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                            messageAsString:@"Exception in didEncounterError"];
+                            [result setKeepCallbackAsBool:YES];
+                            [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+                        }
+        }
+    }];
+}
+
 
 
 
@@ -156,13 +223,17 @@
 
 - (void)didEnterBackground
 {
-    [self.audioReceiver pause];
+  // only pause recording when we go into the background if we're not recording to a file
+  // (otherwis it generates a spurious finished event, and starting again when in the foreground resets the file)
+  if (_fileUrl == nil) [self.audioReceiver pause];
 }
 
 
 - (void)willEnterForeground
 {
-    [self.audioReceiver start];
+  // only start recording when we go into the foreground if we're not recording to a file
+  // (otherwise starting again resets the file)
+  if (_fileUrl == nil) [self.audioReceiver start];
 }
 
 @end
