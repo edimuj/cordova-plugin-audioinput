@@ -57,9 +57,11 @@ public class AudioInputCapture extends CordovaPlugin
 	       this.bufferSize = args.getInt(1);
 	       this.channels = args.getInt(2);
 	       this.format = args.getString(3);
-	       this.audioSource = args.getInt(4);
-	       String fileUrlString = args.getString(5);
-	       if (fileUrlString != null) {
+	       this.audioSource = args.getInt(4);	       
+	       if (args.isNull(5))  {
+		  this.fileUrl = null;
+	       } else {
+		  String fileUrlString = args.getString(5);
 		  this.fileUrl = new URI(fileUrlString);
 		  // ensure it's a file URL
 		  new File(this.fileUrl);
@@ -67,6 +69,7 @@ public class AudioInputCapture extends CordovaPlugin
             }
 	    catch (URISyntaxException e) { // not a valid URL
 	       if (receiver != null) receiver.interrupt();
+	       this.fileUrl = null;
 	       
 	       this.callbackContext.sendPluginResult(
 		  new PluginResult(PluginResult.Status.ERROR, INVALID_URL_ERROR));
@@ -135,17 +138,20 @@ public class AudioInputCapture extends CordovaPlugin
                 this.channels = args.getInt(2);
                 this.format = args.getString(3);
                 this.audioSource = args.getInt(4);
-		String fileUrlString = args.getString(5);
-		if (fileUrlString != null) {
+	       if (args.isNull(5))  {
+		  this.fileUrl = null;
+	       } else {
+		   String fileUrlString = args.getString(5);
 		   this.fileUrl = new URI(fileUrlString);
 		   // ensure it's a file URL
 		   new File(this.fileUrl);
-		}
+	       }
 
                 promptForRecord();
             }
 	    catch (URISyntaxException e) { // not a valid URL
                 if (receiver != null) receiver.interrupt();
+		this.fileUrl = null;
 
                 this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
                 INVALID_URL_ERROR));
@@ -244,16 +250,19 @@ public class AudioInputCapture extends CordovaPlugin
                 catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage(), e);
                 }
-                try {
-                    info.put("file", msg.getData().getString("file"));
-		    activity.sendUpdate(info, false); // release status callback in JS side
-		    activity.callbackContext = null;
-		    return;
-                }
-                catch (JSONException e) {
-                    Log.e(LOG_TAG, e.getMessage(), e);
-                }
-                activity.sendUpdate(info, true);
+		if (activity.fileUrl != null) {
+		   try {
+		      info.put("file", msg.getData().getString("file"));
+		      activity.sendUpdate(info, false); // release status callback in JS side
+		      activity.callbackContext = null;
+		   }
+		   catch (JSONException e) {
+		      Log.e(LOG_TAG, e.getMessage(), e);
+		   }
+		}
+		else {
+		   activity.sendUpdate(info, true);
+		}
             }
         }
     }
