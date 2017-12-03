@@ -89,7 +89,6 @@ public class AudioInputReceiver extends Thread {
     public void run() {
        if (fileUrl == null) {
         int numReadBytes = 0;
-        // byte audioBuffer[] = new byte[readBufferSize];
 	short audioBuffer[] = new short[readBufferSize];
         synchronized(this) {
             recorder.startRecording();
@@ -190,7 +189,7 @@ public class AudioInputReceiver extends Thread {
 	     
 	     recorder.release();
 	     recorder = null;
-	  } // syncrhonized
+	  } // synchronized
        } // recording to fileUrl
     }
 
