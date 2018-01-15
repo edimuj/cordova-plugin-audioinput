@@ -309,9 +309,6 @@ When using `streamToWebAudio`, and have not supplied the plugin with an Audio co
 audioinput.getAudioContext();
 ```
 
-## Related projects
-* The [speechcapture](https://github.com/edimuj/speechcapture) javascript library can be used together with this plugin to detect speech events, as well as capturing the audio: [speechcapture on github](https://github.com/edimuj/speechcapture).
-
 ## Todo list
 [Enhancements](https://github.com/edimuj/cordova-plugin-audioinput/labels/enhancement)
 
