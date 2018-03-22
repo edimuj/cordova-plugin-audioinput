@@ -5,74 +5,79 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
 
     <name>Audio Input</name>
-    <description>This cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your web application.</description>
-	<author>Edin Mujkanovic</author>
-	<license>MIT</license>
-    <keywords>cordova,phonegap,media,microphone,mic,input,audio,waapi,audionode,web,audio,api,audionode,capture,ios,android</keywords>
+    <description>This cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding
+        raw audio data to the web layer of your web application.
+    </description>
+    <author>Edin Mujkanovic</author>
+    <license>MIT</license>
+    <keywords>
+        cordova,phonegap,media,microphone,mic,input,audio,waapi,audionode,web,audio,api,audionode,capture,ios,android
+    </keywords>
     <repo>git://github.com/nzilbb/cordova-plugin-audioinput.git</repo>
-    <!--issue>https://github.com/edimuj/cordova-plugin-audioinput/issues</issue-->
 
     <js-module name="AudioInput" src="www/audioInputCapture.js">
-        <clobbers target="audioinput" />
+        <clobbers target="audioinput"/>
     </js-module>
 
-    <dependency id="cordova-plugin-compat" version="^1.0.0" />
+    <dependency id="cordova-plugin-compat" version="^1.2.0"/>
 
     <!-- android -->
     <platform name="android">
 
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="AudioInputCapture">
-                <param name="android-package" value="com.exelerus.cordova.audioinputcapture.AudioInputCapture" />
+                <param name="android-package" value="com.exelerus.cordova.audioinputcapture.AudioInputCapture"/>
             </feature>
         </config-file>
 
         <config-file parent="/*" target="AndroidManifest.xml">
-            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO"/>
         </config-file>
 
-        <source-file src="src/android/AudioInputCapture.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
-        <source-file src="src/android/AudioInputReceiver.java" target-dir="src/com/exelerus/cordova/audioinputcapture" />
+        <source-file src="src/android/AudioInputCapture.java" target-dir="src/com/exelerus/cordova/audioinputcapture"/>
+        <source-file src="src/android/AudioInputReceiver.java" target-dir="src/com/exelerus/cordova/audioinputcapture"/>
 
     </platform>
 
     <!-- ios -->
     <platform name="ios">
 
-      <config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
-        <string>This app needs microphone access</string>
-      </config-file>
+        <config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
+            <string>This app needs microphone access</string>
+        </config-file>
 
-      <config-file parent="/*" target="config.xml">
-        <feature name="AudioInputCapture">
-          <param name="ios-package" value="CDVAudioInputCapture" />
-        </feature>
-      </config-file>
-      
-      <source-file src="src/ios/CDVAudioInputCapture.m" />
-      <source-file src="src/ios/AudioReceiver.h" />
-      <source-file src="src/ios/AudioReceiver.m" />
-      
-      <framework src="Accelerate.framework" weak="true" />
-      <framework src="CoreAudio.framework" weak="true" />
-      <framework src="AudioToolbox.framework" weak="true" />
-      <framework src="AVFoundation.framework" weak="true" />
-      
+        <config-file parent="/*" target="config.xml">
+            <feature name="AudioInputCapture">
+                <param name="ios-package" value="CDVAudioInputCapture"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/ios/CDVAudioInputCapture.m"/>
+        <source-file src="src/ios/AudioReceiver.h"/>
+        <source-file src="src/ios/AudioReceiver.m"/>
+
+        <framework src="Accelerate.framework" weak="true"/>
+        <framework src="CoreAudio.framework" weak="true"/>
+        <framework src="AudioToolbox.framework" weak="true"/>
+        <framework src="AVFoundation.framework" weak="true"/>
+
     </platform>
 
     <!-- browser -->
     <platform name="browser">
-      <config-file parent="/*" target="config.xml">
-        <feature name="AudioInputCapture">
-          <param name="browser-package" value="AudioInputCapture" />
-        </feature>
-      </config-file>
-      <js-module src="src/browser/AudioInputCaptureProxy.js" name="AudioInputCaptureProxy">
-        <runs />
-      </js-module>
-      <asset src="src/browser/RecorderWorker.js" target=".">
-        <runs />
-      </asset>
+
+        <config-file parent="/*" target="config.xml">
+            <feature name="AudioInputCapture">
+                <param name="browser-package" value="AudioInputCapture"/>
+            </feature>
+        </config-file>
+        <js-module src="src/browser/AudioInputCaptureProxy.js" name="AudioInputCaptureProxy">
+            <runs/>
+        </js-module>
+        <asset src="src/browser/RecorderWorker.js" target=".">
+            <runs/>
+        </asset>
+
     </platform>
 
 </plugin>

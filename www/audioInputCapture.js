@@ -1,22 +1,39 @@
-var argscheck = require('cordova/argscheck'),
-    utils = require('cordova/utils'),
-    exec = require('cordova/exec'),
-    channel = require('cordova/channel');
+/*
+License (MIT)
+
+Copyright © 2016 Edin Mujkanovic
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+*/
+var exec = require('cordova/exec');
 
 var audioinput = {};
 
-// Supported audio formats
+// Audio formats
 audioinput.FORMAT = {
     PCM_16BIT: 'PCM_16BIT',
     PCM_8BIT: 'PCM_8BIT'
 };
 
+// Number of audio channels
 audioinput.CHANNELS = {
     MONO: 1,
     STEREO: 2
 };
 
-// Common Sampling rates
+// Sampling rates
 audioinput.SAMPLERATE = {
     TELEPHONE_8000Hz: 8000,
     CD_QUARTER_11025Hz: 11025,
@@ -54,77 +71,82 @@ audioinput.DEFAULT = {
 /**
  * Does any initialization that might be required.
  *
- * @param {Callback} onComplete
+ * @param cfg
+ * @param onComplete
  */
 audioinput.initialize = function (cfg, onComplete) {
     console.log("audioinput.initialize");
     if (!cfg) {
         cfg = {};
-    }    
+    }
     audioinput._cfg = {};
+
     audioinput._cfg.sampleRate = cfg.sampleRate || audioinput.DEFAULT.SAMPLERATE;
     audioinput._cfg.bufferSize = cfg.bufferSize || audioinput.DEFAULT.BUFFER_SIZE;
     audioinput._cfg.channels = cfg.channels || audioinput.DEFAULT.CHANNELS;
     audioinput._cfg.format = cfg.format || audioinput.DEFAULT.FORMAT;
-    audioinput._cfg.normalize = typeof cfg.normalize == 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
+    audioinput._cfg.normalize = typeof cfg.normalize === 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
     audioinput._cfg.normalizationFactor = cfg.normalizationFactor || audioinput.DEFAULT.NORMALIZATION_FACTOR;
-    audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
+    audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio === 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
     audioinput._cfg.audioContext = cfg.audioContext || null;
     audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
     audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
     audioinput._cfg.fileUrl = cfg.fileUrl || null;
-    
+
     if (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2) {
         throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
-            " supported.";
+        " supported.";
     }
-    else if (audioinput._cfg.format != "PCM_16BIT" && audioinput._cfg.format != "PCM_8BIT") {
+    else if (audioinput._cfg.format !== "PCM_16BIT" && audioinput._cfg.format !== "PCM_8BIT") {
         throw "Invalid format (" + audioinput._cfg.format + "). Only 'PCM_8BIT' and 'PCM_16BIT' is" +
-            " supported.";
+        " supported.";
     }
-    
+
     if (audioinput._cfg.bufferSize <= 0) {
         throw "Invalid bufferSize (" + audioinput._cfg.bufferSize + "). Must be greater than zero.";
     }
-    
+
     if (audioinput._cfg.concatenateMaxChunks <= 0) {
         throw "Invalid concatenateMaxChunks (" + audioinput._cfg.concatenateMaxChunks + "). Must be greater than zero.";
     }
+
     exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "initialize",
-	 [audioinput._cfg.sampleRate,
-          audioinput._cfg.bufferSize,
-          audioinput._cfg.channels,
-          audioinput._cfg.format,
-          audioinput._cfg.audioSourceType,
-          audioinput._cfg.fileUrl]);
-}
+        [audioinput._cfg.sampleRate,
+         audioinput._cfg.bufferSize,
+         audioinput._cfg.channels,
+         audioinput._cfg.format,
+         audioinput._cfg.audioSourceType,
+         audioinput._cfg.fileUrl]);
+};
+
 
 /**
  * Checks (silently) whether the user has already given permission to access the microphone.
  *
- * @param {Callback} onComplete
+ * @param onComplete
  */
 audioinput.checkMicrophonePermission = function (onComplete) {
     console.log("audioinput.checkMicrophonePermission");
     exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "checkMicrophonePermission", []);
-}
+};
+
 
 /**
  * Asks the user for permission to access the microphone.
  *
- * @param {Callback} onComplete
+ * @param onComplete
  */
 audioinput.getMicrophonePermission = function (onComplete) {
     console.log("audioinput.getMicrophonePermission");
     exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "getMicrophonePermission", []);
-}
+};
 
 /**
  * Start capture of Audio input
  *
  * @param {Object} cfg
  * keys:
- *  sampleRateInHz (44100),
+ *  sampleRate (44100),
  *  bufferSize (16384),
  *  channels (1 (mono) or 2 (stereo)),
  *  format ('PCM_8BIT' or 'PCM_16BIT'),
@@ -133,7 +155,7 @@ audioinput.getMicrophonePermission = function (onComplete) {
  *  streamToWebAudio (The plugin will handle all the conversion of raw data to audio)
  *  audioContext (If no audioContext is given, one will be created)
  *  concatenateMaxChunks (How many packets will be merged each time, low = low latency but can require more resources)
- *  audioSourceType (Use audioinput.AUDIOSOURCE_TYPE.)
+ *  audioSourceType (Use audioinput.AUDIOSOURCE_TYPE)
  */
 audioinput.start = function (cfg) {
     console.log("audioinput.start");
@@ -144,13 +166,14 @@ audioinput.start = function (cfg) {
         }
 
         if (!audioinput._cfg) audioinput._cfg = {};
+
         audioinput._cfg.sampleRate = cfg.sampleRate || audioinput.DEFAULT.SAMPLERATE;
         audioinput._cfg.bufferSize = cfg.bufferSize || audioinput.DEFAULT.BUFFER_SIZE;
         audioinput._cfg.channels = cfg.channels || audioinput.DEFAULT.CHANNELS;
         audioinput._cfg.format = cfg.format || audioinput.DEFAULT.FORMAT;
-        audioinput._cfg.normalize = typeof cfg.normalize == 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
+        audioinput._cfg.normalize = typeof cfg.normalize === 'boolean' ? cfg.normalize : audioinput.DEFAULT.NORMALIZE;
         audioinput._cfg.normalizationFactor = cfg.normalizationFactor || audioinput.DEFAULT.NORMALIZATION_FACTOR;
-        audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio == 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
+        audioinput._cfg.streamToWebAudio = typeof cfg.streamToWebAudio === 'boolean' ? cfg.streamToWebAudio : audioinput.DEFAULT.STREAM_TO_WEBAUDIO;
         audioinput._cfg.audioContext = cfg.audioContext || null;
         audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
         audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
@@ -160,7 +183,7 @@ audioinput.start = function (cfg) {
             throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
             " supported.";
         }
-        else if (audioinput._cfg.format != "PCM_16BIT" && audioinput._cfg.format != "PCM_8BIT") {
+        else if (audioinput._cfg.format !== "PCM_16BIT" && audioinput._cfg.format !== "PCM_8BIT") {
             throw "Invalid format (" + audioinput._cfg.format + "). Only 'PCM_8BIT' and 'PCM_16BIT' is" +
             " supported.";
         }
@@ -214,6 +237,11 @@ audioinput.stop = function (onStopped) {
             clearTimeout(audioinput._timerGetNextAudio);
         }
         audioinput._audioDataQueue = null;
+
+        if (audioinput._micGainNode) {
+            audioinput.disconnect();
+            audioinput._micGainNode = null;
+        }
     }
 };
 
@@ -295,7 +323,7 @@ audioinput._audioInputEvent = function (audioInputData) {
         }
         else if (audioInputData && audioInputData.error) {
             audioinput._audioInputErrorEvent(audioInputData.error);
-	}
+        }
         else if (audioInputData && audioInputData.file) {
             audioinput._audioInputFinishedEvent(audioInputData.file);
         }

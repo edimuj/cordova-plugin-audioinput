@@ -25,62 +25,67 @@ function initialize(success, error, opts) {
     console.log("AudioInputCaptureProxy: initialize: " + JSON.stringify(opts));
     onInitialized = success;
     if (!intialized) {
-	sampleRate = opts[0] || sampleRate;
+        sampleRate = opts[0] || sampleRate;
         bufferSize = opts[1] || bufferSize;
         channels = opts[2] || channels;
         format = opts[3] || format;
         audioSourceType = opts[4] || audioSourceType;
-	fileUrl = opts[5] || fileUrl;
-	
-	if (fileUrl) {
-	    window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
-	    if (window.webkitStorageInfo && window.webkitStorageInfo.requestQuota) { 
-		// Chrome/Android requires calling requestQuota first
-		window.webkitStorageInfo.requestQuota(
-			/file:\/\/\/temporary.*/.test(fileUrl)?window.TEMPORARY:window.PERSISTENT,
-		    10*1024*1024,
-		    function(grantedBytes) {
-			console.log("AudioInputCaptureProxy: Granted " + grantedBytes + " bytes storage");
-			window.requestFileSystem(
-				/file:\/\/\/temporary.*/.test(fileUrl)?window.TEMPORARY:window.PERSISTENT,
-			    10*1024*1024,
-			    function(fs) {
-				console.log("AudioInputCaptureProxy: Got file system: " + fs.name);
-				fileSystem = fs;
-				intialized = true;
-				onInitialized();
-			    }, error);
-		    }, error);
-	    } else {
-		// Firefox and Safari/iOS require calling requestFileSystem directly
-		window.requestFileSystem(
-			/file:\/\/\/temporary.*/.test(fileUrl)?window.TEMPORARY:window.PERSISTENT,
-		    10*1024*1024,
-		    function(fs) {
-			console.log("AudioInputCaptureProxy: Got file system: " + fs.name);
-			fileSystem = fs;
-			intialized = true;
-			onInitialized();
-		    }, error);
-	    }
-	    return;
-	} // fileUrl set
-	intialized = true;
+        fileUrl = opts[5] || fileUrl;
+
+        if (fileUrl) {
+            window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+            if (window.webkitStorageInfo && window.webkitStorageInfo.requestQuota) {
+                // Chrome/Android requires calling requestQuota first
+                window.webkitStorageInfo.requestQuota(
+                    /file:\/\/\/temporary.*/.test(fileUrl) ? window.TEMPORARY : window.PERSISTENT,
+                    10 * 1024 * 1024,
+                    function (grantedBytes) {
+                        console.log("AudioInputCaptureProxy: Granted " + grantedBytes + " bytes storage");
+                        window.requestFileSystem(
+                            /file:\/\/\/temporary.*/.test(fileUrl) ? window.TEMPORARY : window.PERSISTENT,
+                            10 * 1024 * 1024,
+                            function (fs) {
+                                console.log("AudioInputCaptureProxy: Got file system: " + fs.name);
+                                fileSystem = fs;
+                                intialized = true;
+                                onInitialized();
+                            }, error);
+                    }, error);
+            }
+            else {
+                // Firefox and Safari/iOS require calling requestFileSystem directly
+                window.requestFileSystem(
+                    /file:\/\/\/temporary.*/.test(fileUrl) ? window.TEMPORARY : window.PERSISTENT,
+                    10 * 1024 * 1024,
+                    function (fs) {
+                        console.log("AudioInputCaptureProxy: Got file system: " + fs.name);
+                        fileSystem = fs;
+                        intialized = true;
+                        onInitialized();
+                    }, error);
+            }
+            return;
+        } // fileUrl set
+        intialized = true;
     } // !initialized
     onInitialized();
 }
+
 function checkMicrophonePermission(success, error, opts) {
     console.log("AudioInputCaptureProxy: checkMicrophonePermission");
     success(microphonePermission);
 }
+
 function getMicrophonePermission(success, error, opts) {
     console.log("AudioInputCaptureProxy: getMicrophonePermission");
     if (microphonePermission) { // already got permission
-	success(microphonePermission);
-    } else { // start audio processing
-	initAudio(success, error);
+        success(microphonePermission);
+    }
+    else { // start audio processing
+        initAudio(success, error);
     }
 }
+
 function start(success, error, opts) {
     console.log("AudioInputCaptureProxy: start: " + JSON.stringify(opts));
     sampleRate = opts[0] || sampleRate;
@@ -94,13 +99,14 @@ function start(success, error, opts) {
     console.log("AudioInputCaptureProxy: start - fileUrl: " + fileUrl);
 
     if (!audioRecorder) {
-	error("Not initialized");
-	return;
+        error("Not initialized");
+        return;
     }
     audioRecorder.clear();
     audioRecorder.record();
 
 }
+
 function stop(success, error, opts) {
     console.log("AudioInputCaptureProxy: stop");
     onStopped = success;
@@ -133,26 +139,25 @@ function initAudio(onSuccess, onError) {
     if (!navigator.getUserMedia) {
         navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
     }
-    if (!navigator.getUserMedia) 
-    {
-	onSuccess(false, "getUserMedia not supported");
-	return;
+    if (!navigator.getUserMedia) {
+        onSuccess(false, "getUserMedia not supported");
+        return;
     }
     onSuccessGotStream = onSuccess;
     navigator.getUserMedia(
         {
-	    "audio": {
+            "audio": {
                 "mandatory": {
-		    "googEchoCancellation": "false",
-		    "googAutoGainControl": "false",
-		    "googNoiseSuppression": "false",
-		    "googHighpassFilter": "false"
+                    "googEchoCancellation": "false",
+                    "googAutoGainControl": "false",
+                    "googNoiseSuppression": "false",
+                    "googHighpassFilter": "false"
                 },
                 "optional": []
-	    },
-        }, gotStream, function(e) {
-	    console.log("AudioInputCaptureProxy: " + e);
-	    onSuccess(false, e);
+            },
+        }, gotStream, function (e) {
+            console.log("AudioInputCaptureProxy: " + e);
+            onSuccess(false, e);
         });
 } // initiAudio
 
@@ -166,78 +171,81 @@ function gotStream(stream) {
     audioStream = stream;
     realAudioInput = audioContext.createMediaStreamSource(stream);
     if (channels = 1) {
-	audioInput = convertToMono( realAudioInput );
-    } else {
-	audioInput = realAudioInput;
+        audioInput = convertToMono(realAudioInput);
+    }
+    else {
+        audioInput = realAudioInput;
     }
 
     // we will end up downsampling, but recorderWorker.js does this by simply dropping samples
     // so we use a low pass filter to prevent aliasing of higher frequencies
     if (sampleRate < audioContext.sampleRate) {
-	var lowPassFilter = audioContext.createBiquadFilter();
-	audioInput.connect(lowPassFilter);
-	lowPassFilter.connect(inputPoint);
-	lowPassFilter.type = lowPassFilter.LOWPASS||"lowpass";
-	lowPassFilter.frequency.value = sampleRate/2;
-	lowPassFilter.connect(inputPoint);
-    } else {
-	audioInput.connect(inputPoint);
+        var lowPassFilter = audioContext.createBiquadFilter();
+        audioInput.connect(lowPassFilter);
+        lowPassFilter.connect(inputPoint);
+        lowPassFilter.type = lowPassFilter.LOWPASS || "lowpass";
+        lowPassFilter.frequency.value = sampleRate / 2;
+        lowPassFilter.connect(inputPoint);
     }
-    
+    else {
+        audioInput.connect(inputPoint);
+    }
+
     console.log("AudioInputCaptureProxy: creating audioRecorder");
-    audioRecorder = new Recorder( inputPoint, { sampleRate: sampleRate } );
+    audioRecorder = new Recorder(inputPoint, {sampleRate: sampleRate});
 
     // pump through zero gain so that the microphone input doesn't play out the speakers causing feedback
     zeroGain = audioContext.createGain();
     zeroGain.gain.value = 0.0;
-    inputPoint.connect( zeroGain );
-    zeroGain.connect( audioContext.destination );
+    inputPoint.connect(zeroGain);
+    zeroGain.connect(audioContext.destination);
 
     microphonePermission = true;
     onSuccessGotStream(microphonePermission);
 } // gotStream
 
-function convertToMono( input ) {
+function convertToMono(input) {
     var splitter = audioContext.createChannelSplitter(2);
     var merger = audioContext.createChannelMerger(2);
-    
-    input.connect( splitter );
-    splitter.connect( merger, 0, 0 );
-    splitter.connect( merger, 0, 1 );
+
+    input.connect(splitter);
+    splitter.connect(merger, 0, 0);
+    splitter.connect(merger, 0, 1);
     return merger;
 }
 
 // callback from recorder invoked when recordin is finished
 function gotBuffers(wav) {
     if (channels == 1) {
-	audioRecorder.exportMonoWAV(doneEncoding, wav);
-    } else {
-	audioRecorder.exportWAV(doneEncoding, wav);
+        audioRecorder.exportMonoWAV(doneEncoding, wav);
+    }
+    else {
+        audioRecorder.exportWAV(doneEncoding, wav);
     }
 }
 
-function doneEncoding( blob ) {
+function doneEncoding(blob) {
     console.log("AudioInputCaptureProxy: doneEncoding - write to: " + fileUrl);
-    var fileName = fileUrl.replace(/.*\//,"");
+    var fileName = fileUrl.replace(/.*\//, "");
     console.log("AudioInputCaptureProxy: doneEncoding - write to file: " + fileName);
-    fileSystem.root.getFile(fileName, {create: true}, function(fileEntry) {
-	fileEntry.createWriter(function(fileWriter) {		    
-	    fileWriter.onwriteend = function(e) {
-		onStopped(fileUrl);
-	    };		    
-	    fileWriter.onerror = function(e) {
-		console.log("AudioInputCaptureProxy: " + fileUrl + " failed");
-		onStopError(e);
-	    };	    
-	    console.log("AudioInputCaptureProxy: Saving " + fileUrl);
-	    fileWriter.write(blob);
-	}, function(e) {
-	    console.log("AudioInputCaptureProxy: Could not create writer for " + fileUrl);
-	    onStopError(e);
-	}); // createWriter .wav
-    }, function(e) {
-	console.log("AudioInputCaptureProxy: Could not get "+fileUrl+ " -  " + e.toString());
-	onStopError(e);
+    fileSystem.root.getFile(fileName, {create: true}, function (fileEntry) {
+        fileEntry.createWriter(function (fileWriter) {
+            fileWriter.onwriteend = function (e) {
+                onStopped(fileUrl);
+            };
+            fileWriter.onerror = function (e) {
+                console.log("AudioInputCaptureProxy: " + fileUrl + " failed");
+                onStopError(e);
+            };
+            console.log("AudioInputCaptureProxy: Saving " + fileUrl);
+            fileWriter.write(blob);
+        }, function (e) {
+            console.log("AudioInputCaptureProxy: Could not create writer for " + fileUrl);
+            onStopError(e);
+        }); // createWriter .wav
+    }, function (e) {
+        console.log("AudioInputCaptureProxy: Could not get " + fileUrl + " -  " + e.toString());
+        onStopError(e);
     }); // getFile .wav
 }
 
@@ -245,87 +253,88 @@ function doneEncoding( blob ) {
 // which in turn ensures the workers starts (in Firefox)
 var WORKER_PATH = 'RecorderWorker.js?' + new Date();
 
-var Recorder = function(source, cfg){
+var Recorder = function (source, cfg) {
     var config = cfg || {};
     var bufferLen = config.bufferLen || 4096;
     this.context = source.context;
-    if(!this.context.createScriptProcessor){
-	this.node = this.context.createJavaScriptNode(bufferLen, 2, 2);
-    } else {
-	this.node = this.context.createScriptProcessor(bufferLen, 2, 2);
+    if (!this.context.createScriptProcessor) {
+        this.node = this.context.createJavaScriptNode(bufferLen, 2, 2);
+    }
+    else {
+        this.node = this.context.createScriptProcessor(bufferLen, 2, 2);
     }
     var worker = new Worker(config.workerPath || WORKER_PATH);
     worker.postMessage({
-	command: 'init',
-	config: {
+        command: 'init',
+        config: {
             sampleRate: this.context.sampleRate,
             downsampleRate: config.sampleRate || this.context.sampleRate
-	}
+        }
     });
     var recording = false,
-	currCallback;
-    
-    this.node.onaudioprocess = function(e){
-	if (!recording) return;
-	worker.postMessage({
+        currCallback;
+
+    this.node.onaudioprocess = function (e) {
+        if (!recording) return;
+        worker.postMessage({
             command: 'record',
             buffer: [
-		e.inputBuffer.getChannelData(0),
-		e.inputBuffer.getChannelData(1)
+                e.inputBuffer.getChannelData(0),
+                e.inputBuffer.getChannelData(1)
             ]
-	});
-    }
-    
-    this.configure = function(cfg){
-	for (var prop in cfg){
-            if (cfg.hasOwnProperty(prop)){
-		config[prop] = cfg[prop];
+        });
+    };
+
+    this.configure = function (cfg) {
+        for (var prop in cfg) {
+            if (cfg.hasOwnProperty(prop)) {
+                config[prop] = cfg[prop];
             }
-	}
-    }
-    
-    this.record = function(){
-	recording = true;
-    }
-    
-    this.stop = function(){
-	recording = false;
-    }
-    
-    this.clear = function(){
-	worker.postMessage({ command: 'clear' });
-    }
-    
-    this.getBuffers = function(cb) {
-	currCallback = cb || config.callback;
-	worker.postMessage({ command: 'getBuffers' })
-    }
-    
-    this.exportWAV = function(cb){
-	currCallback = cb || config.callback;
-	type = config.type || 'audio/wav';
-	if (!currCallback) throw new Error('Callback not set');
-	worker.postMessage({
+        }
+    };
+
+    this.record = function () {
+        recording = true;
+    };
+
+    this.stop = function () {
+        recording = false;
+    };
+
+    this.clear = function () {
+        worker.postMessage({command: 'clear'});
+    };
+
+    this.getBuffers = function (cb) {
+        currCallback = cb || config.callback;
+        worker.postMessage({command: 'getBuffers'})
+    };
+
+    this.exportWAV = function (cb) {
+        currCallback = cb || config.callback;
+        type = config.type || 'audio/wav';
+        if (!currCallback) throw new Error('Callback not set');
+        worker.postMessage({
             command: 'exportWAV',
             type: type
-	});
-    }
-    
-    this.exportMonoWAV = function(cb){
-	currCallback = cb || config.callback;
-	type = config.type || 'audio/wav';
-	if (!currCallback) throw new Error('Callback not set');
-	worker.postMessage({
+        });
+    };
+
+    this.exportMonoWAV = function (cb) {
+        currCallback = cb || config.callback;
+        type = config.type || 'audio/wav';
+        if (!currCallback) throw new Error('Callback not set');
+        worker.postMessage({
             command: 'exportMonoWAV',
             type: type
-	});
-    }
-    
-    worker.onmessage = function(e){
-	var blob = e.data;
-	currCallback(blob);
-    }
-    
+        });
+    };
+
+    worker.onmessage = function (e) {
+        var blob = e.data;
+        currCallback(blob);
+    };
+
     source.connect(this.node);
     this.node.connect(this.context.destination);   // if the script node is not connected to an output the "onaudioprocess" event is not triggered in chrome.
 };
@@ -339,4 +348,5 @@ module.exports = {
     start: start,
     stop: stop
 };
+
 require('cordova/exec/proxy').add('AudioInputCapture', module.exports);
