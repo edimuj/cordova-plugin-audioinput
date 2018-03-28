@@ -1,9 +1,8 @@
 # cordova-plugin-audioinput
 This Cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your web application.
-A typical usage scenario for this plugin would be to use the captured microphone audio as a source for a Web audio API based applications.
+A typical usage scenario for this plugin would be to use the captured microphone audio as an audio source for [Web audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) based applications.
 
-Since `Navigator.getUserMedia()` still isn't supported by all browsers, this plugin provides similar functionality.
-This is especially true for Safari mobile on iOS devices, where the Web Audio API is supported, but currently has no support for `getUserMedia`.
+Since `Navigator.getUserMedia()` and `Navigator.mediaDevices.getUserMedia()` aren't supported by all browsers, this plugin provides similar functionality.
 
 The plugin supports two different methods for microphone capture:
 
@@ -26,10 +25,10 @@ or by using the GitHub project URL:
 cordova plugin add https://github.com/edimuj/cordova-plugin-audioinput.git
 ```
 
-Building with the Intel XDK is also supported. I haven't tested the plugin with PhoneGap build, so feel free to message me if you tried it with success there.
+I haven't tested the plugin with PhoneGap build and ionic build, so feel free to message me if you tried it with success there.
 
 ## Events
-When using the event based approach, the plugin sends the following `window` events:
+When using the event based approach, the plugin emits the following `window` events:
 
 * `audioinput`
 * `audioinputerror`
@@ -55,9 +54,10 @@ audioinput.connect(audioinput.getAudioContext().destination);
 ## Advanced Usage Example - Events
 Use the event based method if you need more control over the capture process.
 
-Subscribe to `audioinput` events: The event will continuously be fired during capture, allowing the application to receive chunks of raw audio data.
+Subscribe to `audioinput` events: The event will continuously be fired during capture, allowing the application to 
+receive chunks of raw audio data.
 
-You can also subscribe to `audioinputerror` error events as seen in the example below.
+You can also subscribe to `audioinputerror` error events as seen in the example below:
 ```javascript
 
 function onAudioInput( evt ) {
@@ -95,74 +95,76 @@ audioinput.stop()
 ```
 
 ## Advanced Usage Example - saving to files
-Use fileUrl in captureCfg if you want to save audio files directly to the file system.
+Use `fileUrl` in the `captureCfg` if you want to save audio files directly to the file system.
 
-This requires adding cordova-plugin-file to your project.
-
+This requires adding `cordova-plugin-file` to your project:
 ```javascript
 
-// get access to the file system
+// Get access to the file system
 window.requestFileSystem(window.TEMPORARY, 5*1024*1024, function(fs) {
     console.log("Got file system: " + fs.name);
     fileSystem = fs;
 
-    // now you can initialis audio, telling it about the file system you want to use
+    // now you can initialis audio, telling it about the file system you want to use.
     var captureCfg = {
-	sampleRate: 16000,
-	bufferSize: 8192,
-	channels: 1,
-	format: audioinput.FORMAT.PCM_16BIT,
-	audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
-	fileUrl: cordova.file.cacheDirectory
+		sampleRate: 16000,
+		bufferSize: 8192,
+		channels: 1,
+		format: audioinput.FORMAT.PCM_16BIT,
+		audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
+		fileUrl: cordova.file.cacheDirectory
     };
-    window.audioinput.initialize(captureCfg, function() {
-	
-	// now check whether we already have permission to access the microphone
-	window.audioinput.checkMicrophonePermission(function(hasPermission) {
-	    if (hasPermission) {
-		console.log("already have permission to record");
-	    } else {
-		// ask the user for permission to access the microphone
-		window.audioinput.getMicrophonePermission(function(hasPermission, message) {
+    
+    // Initialize the audioinput plugin.
+    window.audioinput.initialize(captureCfg, function() {	
+		// Now check whether we already have permission to access the microphone.
+		window.audioinput.checkMicrophonePermission(function(hasPermission) {
 		    if (hasPermission) {
-			console.log("granted permission to record");
-		    } else {
-			console.warn("Denied permission to record");
+				console.log("Already have permission to record.");
+		    } 
+		    else {	        
+			    // Ask the user for permission to access the microphone
+				window.audioinput.getMicrophonePermission(function(hasPermission, message) {
+				    if (hasPermission) {
+						console.log("User granted permission to record.");
+				    } else {
+						console.warn("User denied permission to record.");
+				    }
+				});
 		    }
-		}); // getMicrophonePermission
-	    }
-	}); // checkMicrophonePermission
-    }); // initialize
+		});
+    });
 }, function (e) {
-    console.log("Couldn't get file system: " + e.message)
+	console.log("Couldn't access file system: " + e.message)
 });
 
-
-// then later on, when we want to record to a file...
-
+// Later, when we want to record to a file...
 var captureCfg = {
     fileUrl : cordova.file.cacheDirectory + "temp.wav"
 }
+
+// Start the capture.
 audioinput.start(captureCfg);
 
-// ... and when we're ready to stop recording
+// ...and when we're ready to stop recording.
 audioinput.stop(function(url) {
-    // now you have the URL (which might be different to the one passed in to start())
-    // you might, for example, read the data into a blob
+    // Now you have the URL (which might be different to the one passed in to audioinput.start())
+    // You might, for example, read the data into a blob.
     window.resolveLocalFileSystemURL(url, function (tempFile) {
 	tempFile.file(function (tempWav) {
-	    var reader = new FileReader();	    
-	    reader.onloadend = function(e) {
-		var blob = new Blob([new Uint8Array(this.result)], { type: "audio/wav" });
-		// delete the temporary file
-		tempFile.remove(function (e) { console.log("temporary WAV deleted"); }, fileError);
-		// do something with the blob:
-		doSomethingWithWAVData(blob);		
-	    }	    
-	    reader.readAsArrayBuffer(tempWav);
-	});
+		    var reader = new FileReader();	    
+		    reader.onloadend = function(e) {
+		        // Create the blob from the result.
+				var blob = new Blob([new Uint8Array(this.result)], { type: "audio/wav" });
+				// Delete the temporary file.
+				tempFile.remove(function (e) { console.log("temporary WAV deleted"); }, fileError);			
+				// Do something with the blob.
+				doSomethingWithWAVData(blob);		
+		    }
+		    reader.readAsArrayBuffer(tempWav);
+		});
     }, function(e) {
-	console.log("Could not resolveLocalFileSystemURL: " + e.message);
+		console.log("Could not resolveLocalFileSystemURL: " + e.message);
     });
 });
 
@@ -174,10 +176,10 @@ The `demo` folder contains some usage examples.
 
 Remember that unfiltered microphone output likely will create a nasty audio feedback loop, so lower the volume before trying out the demos!
 
-* webaudio-demo - How to use the audioinput object as a Web Audio API AudioNode that can be connected to your own chain of AudioNodes.
-* events-demo - How to subscribe to the audioinput events to get and handle chunks of raw audio data.
-* wav-demo - How to encode recorded data to WAV format and use the resulting blob as a source for Audio elements.
-* file-demo - How to encode recorded data to WAV format and save the resulting blob as a file. To run this demo ```cordova plugin add cordova-plugin-file``` is required.
+* `webaudio-demo` - How to use the audioinput object as a Web Audio API AudioNode that can be connected to your own chain of AudioNodes.
+* `events-demo` - How to subscribe to the audioinput events to get and handle chunks of raw audio data.
+* `wav-demo` - How to encode recorded data to WAV format and use the resulting blob as a source for Audio elements.
+* `file-demo` - How to encode recorded data to WAV format and save the resulting blob as a file. To run this demo ```cordova plugin add cordova-plugin-file``` is required.
 
 ## API
 **Prepare for capturing audio** from the microphone.
@@ -186,27 +188,25 @@ Performs any required preparation for recording audio on the given platform.
 audioinput.initialize( captureCfg, onInitialized );
 ```
 
-**Check whether the module already has permission to access the microphone.
+**Check whether the module already has permission to access the microphone.**
 The callback function has a single boolean argument, which is true if access to the microphone
-has been granted, and false otherwise. The check is passive - the user is not asked for permission
+has been granted, and false otherwise. The check is silent - the user is not asked for permission
 if they haven't already granted it.
 ```javascript
 audioinput.checkMicrophonePermission( onComplete );
 ```
 
-**Obtains permission to access the microphone from the user.
-This function will prompt the user for access to the microphone if they haven't already
-granted it.
+**Obtains permission to access the microphone from the user.**
+This function will prompt the user for access to the microphone if they haven't already granted it.
 The callback function has two arguments:
- * hasPermission - true if access to the microphone has been granted, and false otherwise.
- * message - optionally, a reason message, hasPermission is false
+ * `hasPermission` - true if access to the microphone has been granted, and false otherwise.
 ```javascript
 audioinput.getMicrophonePermission( onComplete );
 ```
 
 **Start capturing audio** from the microphone.
-Ensure that initialize and at least checkMicrophonePermission have been called before calling this.
-The captureCfg parameter can include more configuration than previously passed to initialize.
+Ensure that initialize and at least `checkMicrophonePermission` have been called before calling this.
+The `captureCfg` parameter can include more configuration than previously passed to initialize.
 ```javascript
 audioinput.start( captureCfg );
 ```
@@ -220,7 +220,7 @@ var captureCfg = {
     // For convenience, use the audioinput.SAMPLERATE constants to set this parameter.
     sampleRate: audioinput.SAMPLERATE.CD_AUDIO_44100Hz,
     
-    // Maximum size in bytes of the capture buffer.
+    // Maximum size in bytes of the capture buffer. Should be a power of two and <= 16384.
     bufferSize: 16384,
     
     // The number of channels to use: Mono (1) or Stereo (2).

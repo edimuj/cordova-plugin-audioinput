@@ -65,7 +65,8 @@ audioinput.DEFAULT = {
     NORMALIZATION_FACTOR: 32767.0,
     STREAM_TO_WEBAUDIO: false,
     CONCATENATE_MAX_CHUNKS: 10,
-    AUDIOSOURCE_TYPE: audioinput.AUDIOSOURCE_TYPE.DEFAULT
+    AUDIOSOURCE_TYPE: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
+    DEBUG: false
 };
 
 /**
@@ -75,7 +76,6 @@ audioinput.DEFAULT = {
  * @param onComplete
  */
 audioinput.initialize = function (cfg, onComplete) {
-    console.log("audioinput.initialize");
     if (!cfg) {
         cfg = {};
     }
@@ -92,6 +92,7 @@ audioinput.initialize = function (cfg, onComplete) {
     audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
     audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
     audioinput._cfg.fileUrl = cfg.fileUrl || null;
+    audioinput._cfg.debug = cfg.debug || audioinput.DEFAULT.DEBUG;
 
     if (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2) {
         throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
@@ -101,12 +102,10 @@ audioinput.initialize = function (cfg, onComplete) {
         throw "Invalid format (" + audioinput._cfg.format + "). Only 'PCM_8BIT' and 'PCM_16BIT' is" +
         " supported.";
     }
-
-    if (audioinput._cfg.bufferSize <= 0) {
+    else if (audioinput._cfg.bufferSize <= 0) {
         throw "Invalid bufferSize (" + audioinput._cfg.bufferSize + "). Must be greater than zero.";
     }
-
-    if (audioinput._cfg.concatenateMaxChunks <= 0) {
+    else if (audioinput._cfg.concatenateMaxChunks <= 0) {
         throw "Invalid concatenateMaxChunks (" + audioinput._cfg.concatenateMaxChunks + "). Must be greater than zero.";
     }
 
@@ -126,7 +125,6 @@ audioinput.initialize = function (cfg, onComplete) {
  * @param onComplete
  */
 audioinput.checkMicrophonePermission = function (onComplete) {
-    console.log("audioinput.checkMicrophonePermission");
     exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "checkMicrophonePermission", []);
 };
 
@@ -137,7 +135,6 @@ audioinput.checkMicrophonePermission = function (onComplete) {
  * @param onComplete
  */
 audioinput.getMicrophonePermission = function (onComplete) {
-    console.log("audioinput.getMicrophonePermission");
     exec(onComplete, audioinput._audioInputErrorEvent, "AudioInputCapture", "getMicrophonePermission", []);
 };
 
@@ -158,7 +155,6 @@ audioinput.getMicrophonePermission = function (onComplete) {
  *  audioSourceType (Use audioinput.AUDIOSOURCE_TYPE)
  */
 audioinput.start = function (cfg) {
-    console.log("audioinput.start");
     if (!audioinput._capturing) {
 
         if (!cfg) {
@@ -178,6 +174,7 @@ audioinput.start = function (cfg) {
         audioinput._cfg.concatenateMaxChunks = cfg.concatenateMaxChunks || audioinput.DEFAULT.CONCATENATE_MAX_CHUNKS;
         audioinput._cfg.audioSourceType = cfg.audioSourceType || 0;
         audioinput._cfg.fileUrl = cfg.fileUrl || null;
+        audioinput._cfg.debug = cfg.debug || audioinput.DEFAULT.DEBUG;
 
         if (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2) {
             throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +
@@ -187,12 +184,10 @@ audioinput.start = function (cfg) {
             throw "Invalid format (" + audioinput._cfg.format + "). Only 'PCM_8BIT' and 'PCM_16BIT' is" +
             " supported.";
         }
-
-        if (audioinput._cfg.bufferSize <= 0) {
+        else if (audioinput._cfg.bufferSize <= 0) {
             throw "Invalid bufferSize (" + audioinput._cfg.bufferSize + "). Must be greater than zero.";
         }
-
-        if (audioinput._cfg.concatenateMaxChunks <= 0) {
+        else if (audioinput._cfg.concatenateMaxChunks <= 0) {
             throw "Invalid concatenateMaxChunks (" + audioinput._cfg.concatenateMaxChunks + "). Must be greater than zero.";
         }
 
@@ -226,7 +221,6 @@ audioinput.start = function (cfg) {
  * Stop capturing audio
  */
 audioinput.stop = function (onStopped) {
-    console.log("audioinput.stop");
     if (audioinput._capturing) {
         exec(onStopped, audioinput._audioInputErrorEvent, "AudioInputCapture", "stop", []);
         audioinput._capturing = false;
@@ -335,20 +329,38 @@ audioinput._audioInputEvent = function (audioInputData) {
 
 /**
  * Error callback for AudioInputCapture start
+ * @param errorMessage
  * @private
  */
-
-audioinput._audioInputErrorEvent = function (e) {
-    cordova.fireWindowEvent("audioinputerror", {message: e});
+audioinput._audioInputErrorEvent = function (errorMessage) {
+    cordova.fireWindowEvent("audioinputerror", {message: errorMessage});
+    if (audioinput._cfg.debug) {
+        console.error("audioinput._audioInputErrorEvent: " + errorMessage);
+    }
 };
 
 /**
  * Finished callback for AudioInputCapture start
+ * @param fileUrl
  * @private
  */
-
 audioinput._audioInputFinishedEvent = function (fileUrl) {
     cordova.fireWindowEvent("audioinputfinished", {file: fileUrl});
+    if (audioinput._cfg.debug) {
+        console.log("audioinput._audioInputFinishedEvent: " + fileUrl);
+    }
+};
+
+/**
+ * Finished callback for AudioInputCapture start
+ * @param debugMessage
+ * @private
+ */
+audioinput._audioInputDebugEvent = function (debugMessage) {
+    if (audioinput._cfg.debug) {
+        cordova.fireWindowEvent("audioinputdebug", {message: debugMessage});
+        console.log("audioinput._audioInputFinishedEvent: " + debugMessage);
+    }
 };
 
 /**
@@ -361,7 +373,7 @@ audioinput._normalizeAudio = function (pcmData) {
 
     if (audioinput._cfg.normalize) {
         for (var i = 0; i < pcmData.length; i++) {
-            pcmData[i] = parseFloat(pcmData[i] / audioinput._cfg.normalizationFactor);
+            pcmData[i] = parseFloat(pcmData[i]) / audioinput._cfg.normalizationFactor;
         }
 
         // If last value is NaN, remove it.
@@ -471,6 +483,7 @@ audioinput._initWebAudio = function (audioCtxFromCfg) {
     }
     catch (e) {
         audioinput._webAudioAPISupported = false;
+        audioinput._audioInputDebugEvent("_initWebAudio - Web Audio is not supported on this platform.");
         return false;
     }
 };
