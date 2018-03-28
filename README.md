@@ -41,14 +41,34 @@ After the Cordova `deviceready` event has fired:
 // raw data, and therefore will not send any audioinput events.
 // If an audio context is not provided, the plugin will create one for you.``
 
-audioinput.start({
-    streamToWebAudio: true
+function startCapture() {
+	audioinput.start({
+		streamToWebAudio: true
+	});
+	
+	// Connect the audioinput to the device speakers in order to hear the captured sound.
+	audioinput.connect(audioinput.getAudioContext().destination);
+}
+
+// First check whether we already have permission to access the microphone.
+window.audioinput.checkMicrophonePermission(function(hasPermission) {
+	if (hasPermission) {
+		console.log("We already have permission to record.");
+		startCapture();
+	} 
+	else {	        
+		// Ask the user for permission to access the microphone
+		window.audioinput.getMicrophonePermission(function(hasPermission, message) {
+			if (hasPermission) {
+				console.log("User granted us permission to record.");
+				startCapture();
+			} else {
+				console.warn("User denied permission to record.");
+			}
+		});
+	}
 });
 
-
-// Connect the audioinput to the device speakers in order to hear the captured sound.
-
-audioinput.connect(audioinput.getAudioContext().destination);
 
 ```
 
@@ -81,7 +101,8 @@ window.addEventListener( "audioinputerror", onAudioInputError, false );
 
 ```
 
-After the Cordova `deviceready` event has fired:
+After the Cordova `deviceready` event has fired (don't forget to first check/get microphone permissions 
+as shown in the basic example above):
 ```javascript
 
 // Start capturing audio from the microphone
@@ -95,7 +116,7 @@ audioinput.stop()
 
 ```
 
-## Advanced Usage Example - saving to files
+## Advanced Usage Example - Saving to files
 Use `fileUrl` in the `captureCfg` if you want to save audio files directly to the file system.
 
 This requires adding `cordova-plugin-file` to your project:
@@ -106,7 +127,7 @@ window.requestFileSystem(window.TEMPORARY, 5*1024*1024, function(fs) {
     console.log("Got file system: " + fs.name);
     fileSystem = fs;
 
-    // now you can initialis audio, telling it about the file system you want to use.
+    // Now you can initialize audio, telling it about the file system you want to use.
     var captureCfg = {
 		sampleRate: 16000,
 		bufferSize: 8192,
