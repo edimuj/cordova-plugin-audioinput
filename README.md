@@ -193,7 +193,11 @@ audioinput.stop(function(url) {
 
 ```
 
-## Demos
+## Demo app
+[app-audioinput-demo](https://github.com/edimuj/app-audioinput-demo) is a Cordova app project using this plugin based 
+on the examples below.
+
+## Examples
 The `demo` folder contains some usage examples.
 
 Remember that unfiltered microphone output likely will create a nasty audio feedback loop, so lower the volume before trying out the demos!
