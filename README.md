@@ -39,11 +39,12 @@ After the Cordova `deviceready` event has fired:
 
 // Start with default values and let the plugin handle conversion of 
 // raw data, and therefore will not send any audioinput events.
-// If an audio context is not provided, the plugin will create one for you.
+// If an audio context is not provided, the plugin will create one for you.``
 
 audioinput.start({
     streamToWebAudio: true
 });
+
 
 // Connect the audioinput to the device speakers in order to hear the captured sound.
 
