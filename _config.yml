@@ -1,0 +1,8 @@
+title: Cordova-plugin-audioinput
+description: This plugin captures the device's microphone and forwards the raw audio data to your HTML5 app.
+google_analytics: UA-72594064-1
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
