@@ -83,7 +83,10 @@ public class AudioInputCapture extends CordovaPlugin
 					String fileUrlString = args.getString(5);
 					this.fileUrl = new URI(fileUrlString);
 					// Ensure it's a file URL
-					new File(this.fileUrl);
+					File file = new File(this.fileUrl);
+					if (file.exists() == true) {
+						file.delete();
+					}
 				}
 			}
 			catch (URISyntaxException e) { // Not a valid URL
@@ -169,7 +172,10 @@ public class AudioInputCapture extends CordovaPlugin
 					String fileUrlString = args.getString(5);
 					this.fileUrl = new URI(fileUrlString);
 					// Ensure it's a file URL
-					new File(this.fileUrl);
+					File file = new File(this.fileUrl);
+					if (file.exists() == true) {
+						file.delete();
+					}
 				}
 
 				promptForRecord();
