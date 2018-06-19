@@ -18,8 +18,8 @@
     <js-module name="AudioInput" src="www/audioInputCapture.js">
         <clobbers target="audioinput"/>
     </js-module>
-
-    <dependency id="cordova-plugin-compat" version="^1.2.0"/>
+ <!-- cordova-plugin-compat is only needed for < android 6.3.0 -->
+   <!--  <dependency id="cordova-plugin-compat" version="^1.2.0"/>  -->
 
     <!-- android -->
     <platform name="android">
