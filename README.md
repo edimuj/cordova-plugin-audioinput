@@ -207,6 +207,37 @@ Remember that unfiltered microphone output likely will create a nasty audio feed
 * `wav-demo` - How to encode recorded data to WAV format and use the resulting blob as a source for Audio elements.
 * `file-demo` - How to encode recorded data to WAV format and save the resulting blob as a file. To run this demo ```cordova plugin add cordova-plugin-file``` is required.
 
+## Usage from Typescript
+Typings are included in the package to facilitate usage from Typescript. The following typings are defined:
+
+- `AudioInput` class exposing all plugin functions
+- `AudioInputConfiguration` interface
+- `AudioInputSettings` namespace which contains all available settings:
+	- `BUFFERSIZE`
+	- `FORMAT`
+	- `CHANNELS`
+	- `SAMPLERATE`
+	- `AUDIOSOURCE_TYPE`
+	
+The following example shows how to use it:
+```typescript
+import { AudioInput, AudioInputConfiguration, AudioInputSettings }  from 'cordova-plugin-audioinput';
+
+declare var audioinput: AudioInput;
+
+let audioCfg: AudioInputConfiguration = {
+	sampleRate: AudioInputSettings.SAMPLERATE.CD_AUDIO_44100Hz,
+	channels: AudioInputSettings.CHANNELS.STEREO,
+	bufferSize: AudioInputSettings.BUFFERSIZE.BS_4096
+}
+
+...
+audioinput.start(audioCfg);
+...
+
+```
+	
+
 ## API
 **Prepare for capturing audio** from the microphone.
 Performs any required preparation for recording audio on the given platform.
