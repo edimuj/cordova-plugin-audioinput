@@ -9,6 +9,7 @@
       "ios"
     ]
   },
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edimuj/cordova-plugin-audioinput.git"
