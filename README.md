@@ -221,14 +221,14 @@ Typings are included in the package to facilitate usage from Typescript. The fol
 	
 The following example shows how to use it:
 ```typescript
-import { AudioInput, AudioInputConfiguration, AudioInputSettings }  from 'cordova-plugin-audioinput';
+import { AudioInput, AudioInputConfiguration }  from 'cordova-plugin-audioinput';
 
 declare var audioinput: AudioInput;
 
 let audioCfg: AudioInputConfiguration = {
 	sampleRate: AudioInputSettings.SAMPLERATE.CD_AUDIO_44100Hz,
 	channels: AudioInputSettings.CHANNELS.STEREO,
-	bufferSize: AudioInputSettings.BUFFERSIZE.BS_4096
+	bufferSize: 4096
 }
 
 ...
