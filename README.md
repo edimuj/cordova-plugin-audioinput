@@ -226,8 +226,8 @@ import { AudioInput, AudioInputConfiguration }  from 'cordova-plugin-audioinput'
 declare var audioinput: AudioInput;
 
 let audioCfg: AudioInputConfiguration = {
-	sampleRate: AudioInputSettings.SAMPLERATE.CD_AUDIO_44100Hz,
-	channels: AudioInputSettings.CHANNELS.STEREO,
+	sampleRate: audioinput.SAMPLERATE.CD_AUDIO_44100Hz,
+	channels: audioinput.CHANNELS.STEREO,
 	bufferSize: 4096
 }
 
