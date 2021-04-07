@@ -111,6 +111,11 @@
             [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
         }
 
+        if (command != nil) {
+          CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:_fileUrl];
+          [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        }
+
 	if (_fileUrl == nil) {
 	  self.callbackId = nil;
 	}
