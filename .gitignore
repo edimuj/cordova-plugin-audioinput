@@ -7,3 +7,4 @@
 !/package.json
 !/.gitignore
 !/plugin.xml
+!/index.d.ts
