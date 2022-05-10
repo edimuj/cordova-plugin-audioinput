@@ -63,9 +63,14 @@ void HandleInputBuffer(void* inUserData,
 
         AVAudioSession* avSession = [AVAudioSession sharedInstance];
 
+        int avOptions = AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker;
+        if([self isBTHeadsetConnected]) {
+            avOptions =  avOptions | AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+        }
+
         NSError *setCategoryError = nil;
         if (![avSession setCategory:AVAudioSessionCategoryPlayAndRecord
-         withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker
+         withOptions:avOptions
          error:&setCategoryError]) {
             // handle error?
         }
@@ -268,5 +273,22 @@ void HandleInputBuffer(void* inUserData,
     [self.delegate didFinish:file];
 }
 
+/**
+  Checks if a Bluethooth audio headset is connected
+  returns true if so
+*/
+- (Boolean) isBTHeadsetConnected {
+    AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
+    for (AVAudioSessionPortDescription *port in currentRoute.outputs)
+    {
+        if ([port.portType isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
+            [port.portType isEqualToString:AVAudioSessionPortBluetoothHFP])
+        {
+            return true;
+        }
+
+    }
+    return false;
+}
 
 @end
