@@ -72,7 +72,7 @@
         <js-module src="src/browser/AudioInputCaptureProxy.js" name="AudioInputCaptureProxy">
             <runs/>
         </js-module>
-        <asset src="src/browser/RecorderWorker.js" target=".">
+        <asset src="src/browser/RecorderWorker.js" target="./RecorderWorker.js">
             <runs/>
         </asset>
 
