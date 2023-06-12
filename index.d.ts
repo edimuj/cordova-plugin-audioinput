@@ -58,6 +58,9 @@ export interface AudioInputConfiguration {
   // is available.
   fileUrl?: string;
 
+  // Optional onError callback. Is called with error message string as parameter.
+  onError?: Function;
+
   // Guess it?
   debug?: boolean;
 }

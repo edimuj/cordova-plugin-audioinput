@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-audioinput",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This cordova plugin enables audio capture from the device microphone, by in (near) real-time forwarding raw audio data to the web layer of your application.",
   "cordova": {
     "id": "cordova-plugin-audioinput",

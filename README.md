@@ -318,6 +318,11 @@ var captureCfg = {
     // -VOICE_RECOGNITION - Tuned for voice recognition if available (Android only)
     audioSourceType: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
 
+	// If you have your own error handler, you can set a callback to your function 
+	// using the onError parameter. The callback function will be called with a single string parameter
+	// that contains the error message.
+	onError: undefined,
+	
     // Optionally specifies a file://... URL to which the audio should be saved.
     // If this is set, then no audioinput events will be raised during recording.
     // When stop is called, a single audioinputfinished event will be raised, with
