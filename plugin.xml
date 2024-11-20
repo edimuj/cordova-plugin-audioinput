@@ -30,6 +30,7 @@
 
         <config-file parent="/*" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+            <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
         </config-file>
 
         <source-file src="src/android/AudioInputCapture.java" target-dir="src/com/exelerus/cordova/audioinputcapture"/>
